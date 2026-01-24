@@ -46,6 +46,7 @@ Backend follows a layered architecture:
 
 ---
 
+```bash
 drmeet-frontend/
 │
 ├── public/
