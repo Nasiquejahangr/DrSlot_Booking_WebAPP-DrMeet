@@ -2,12 +2,6 @@
 
 This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
 
-
-## React Compiler
-
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
-
-
 # DrMeet – Doctor Appointment System
 
 DrMeet is a web-based doctor appointment system designed to simplify appointment scheduling between patients and doctors. Users can search doctors by locality and specialization, view available time slots, and book appointments only after payment confirmation.
