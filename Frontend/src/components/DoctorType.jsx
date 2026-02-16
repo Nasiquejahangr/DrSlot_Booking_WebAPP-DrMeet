@@ -1,4 +1,5 @@
 import React from 'react'
+import { useNavigate } from 'react-router-dom';
 import { FaUserMd, FaBaby, FaBone, FaBrain, FaHeartbeat, FaEye, FaTooth, FaLungs, FaStethoscope } from "react-icons/fa";
 
 const iconMap = {
@@ -16,6 +17,7 @@ const iconMap = {
 function DoctorType(props) {
     const icon = iconMap[props.type] || iconMap['General'];
     const IconComponent = icon.icon;
+    const navigate = useNavigate();
 
     return (
         <>
@@ -24,8 +26,12 @@ function DoctorType(props) {
              hover:border-[#00786f] hover:shadow-xl
               transition duration-300 p-4 font-bold
                text-gray-700 font-roboto'
-                onClick={() => window.location.href = `/search?specialization=${props.type}`}
+                onClick={
+                    () => navigate("/search")
+                }
             >
+
+
                 <div className={`${icon.bgColor}  mt-5 rounded-3xl w-15 h-15 flex items-center justify-center`}>
                     <IconComponent className={`w-8 h-6 ${icon.iconColor}`} />
                 </div>

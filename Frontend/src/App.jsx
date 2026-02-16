@@ -13,7 +13,8 @@ import 'react-toastify/dist/ReactToastify.css';
 import Login from './pages/auth/User/Login';
 import Register from './pages/auth/User/Register';
 import PrivateRoute from "./components/PrivateRoute";
-
+import Dashboard from './pages/Doctor/Dashboard';
+import DoctorRegistration from './pages/auth/Doctor/DoctorRegistration';
 
 
 function App() {
@@ -93,6 +94,19 @@ function App() {
           <Route path='/register' element={
             <motion.div {...pageFade}>
               <Register />
+            </motion.div>
+          } />
+
+          <Route path='/Dashboard' element={
+            <motion.div {...pageFade}>
+              <PrivateRoute>
+                <Dashboard />
+              </PrivateRoute>
+            </motion.div>
+          } />
+          <Route path='/DoctorRegister' element={
+            <motion.div {...pageFade}>
+              <DoctorRegistration />
             </motion.div>
           } />
         </Routes>

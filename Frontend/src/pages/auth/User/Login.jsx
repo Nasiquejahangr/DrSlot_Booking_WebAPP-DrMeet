@@ -2,10 +2,12 @@ import React from 'react'
 import { useState } from 'react';
 import Logo from '../../../assets/Logo.svg'
 import { useNavigate } from 'react-router-dom';
+import { toast } from 'react-toastify';
 function Login() {
 
   const [email, setemail] = useState("");
   const [password, setpassword] = useState("");
+
 
   function handleSubmit(e) {
     e.preventDefault();
@@ -14,17 +16,16 @@ function Login() {
     // Here you can add your login logic, such as making an API call to authenticate the user.
   }
 
-
-
-
-
   // Simulate successful login and redirect to homepage
   const navigate = useNavigate();
+
   function handleLogin() {
     // after backend success
     localStorage.setItem("token", "userLoggedIn");
+    toast.success("Login successful!");
     navigate("/");
   }
+
 
   return (
     <>

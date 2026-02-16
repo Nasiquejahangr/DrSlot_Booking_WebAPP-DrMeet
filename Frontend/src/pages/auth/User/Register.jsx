@@ -13,6 +13,7 @@ function Register() {
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [phoneNumber, setPhoneNumber] = useState("");
+  const [userType, setUserType] = useState("user");
 
   function handleSubmit(e) {
     e.preventDefault();
@@ -27,23 +28,26 @@ function Register() {
       return;
     }
 
-
-
-
     // Save user data to localStorage
     localStorage.setItem("token", "userLoggedIn");
     localStorage.setItem("userName", fullName);
     localStorage.setItem("userEmail", email);
     localStorage.setItem("userPhone", phoneNumber);
+    localStorage.setItem("userType", userType);
+    localStorage.setItem("isDoctor", userType === "doctor" ? "true" : "false");
 
     // You can also add age, gender, city fields later if needed
 
-    toast.success("Registration successful!");
+    toast.success(`${userType === "doctor" ? "Doctor" : "User"} registration successful!`);
 
     // Redirect to login or home page after a short delay
     setTimeout(() => {
       navigate("/login");
     }, 1500); // Redirect after 1.5 seconds to show the success message
+  }
+  if (userType === "doctor") {
+    navigate("/DoctorRegister");
+    // Prevent rendering the user registration form
   }
 
   return (
@@ -56,9 +60,40 @@ function Register() {
           <div className='flex justify-center mb-4'>
             <img src={Logo} alt="Logo" className='w-20 h-20 object-contain' />
           </div>
-          <h2 className="text-2xl text-center font-bold mb-6 text-gray-700">User Registration</h2>
+          <h2 className="text-2xl text-center font-bold mb-6 text-gray-700">Registration</h2>
 
-          {/* Full Name */}
+          {/*  User type selection */}
+          <div className="mb-4">
+            <label className="block text-center text-gray-700 mb-3 font-semibold">Register as</label>
+            <div className="flex gap-6 justify-center">
+              <label className="flex items-center cursor-pointer">
+                <input
+                  type="radio"
+                  name="userType"
+                  value="user"
+                  checked={userType === "user"}
+                  onChange={(e) => setUserType(e.target.value)}
+                  className="mr-2 w-4 h-4 text-[#1a79f7] focus:ring-[#1a79f7]"
+                />
+                <span className="text-gray-700">User</span>
+              </label>
+
+              {/* // Doctor option */}
+              <label className="flex items-center cursor-pointer">
+                <input
+                  type="radio"
+                  name="userType"
+                  value="doctor"
+                  checked={userType === "doctor"}
+                  onChange={(e) => setUserType(e.target.value)}
+                  className="mr-2 w-4 h-4 text-[#1a79f7] focus:ring-[#1a79f7]"
+                />
+                <span className="text-gray-700">Doctor</span>
+              </label>
+            </div>
+          </div>
+
+
           <div className="mb-4">
             <label className="block text-gray-700 mb-2" htmlFor="fullName">Full Name</label>
             <input
@@ -72,7 +107,6 @@ function Register() {
             />
           </div>
 
-          {/* Email */}
           <div className="mb-4">
             <label className="block text-gray-700 mb-2" htmlFor="email">Email</label>
             <input
@@ -86,7 +120,7 @@ function Register() {
             />
           </div>
 
-          {/* Password */}
+
           <div className="mb-4">
             <label className="block text-gray-700 mb-2" htmlFor="password">Password</label>
             <input
@@ -100,7 +134,7 @@ function Register() {
             />
           </div>
 
-          {/* Confirm Password */}
+
           <div className="mb-4">
             <label className="block text-gray-700 mb-2" htmlFor="confirmPassword">Confirm Password</label>
             <input
@@ -114,7 +148,7 @@ function Register() {
             />
           </div>
 
-          {/* Phone Number */}
+
           <div className="mb-6">
             <label className="block text-gray-700 mb-2" htmlFor="phoneNumber">Phone Number</label>
             <input
