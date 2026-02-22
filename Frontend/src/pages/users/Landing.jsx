@@ -1,6 +1,6 @@
 import { IoLocationOutline, IoSearch } from "react-icons/io5";
 import { RiHospitalLine } from "react-icons/ri";
-import DoctorType from '../../components/DoctorType';
+import DoctorType from '../../components/DoctorTypeIcon';
 import { FaCalendarCheck, FaShieldAlt, FaClock } from "react-icons/fa";
 
 

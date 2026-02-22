@@ -14,6 +14,9 @@ function DoctorRegistration() {
     const [specialization, setSpecialization] = useState("");
     const [hospitalName, setHospitalName] = useState("");
     const [medicalLicenseNumber, setMedicalLicenseNumber] = useState("");
+    const [workingExperience, setWorkingExperience] = useState("");
+    const [clinicLocation, setClinicLocation] = useState("");
+    const [qualification, setQualification] = useState("");
     const [certificate, setCertificate] = useState(null);
 
     function handleFileChange(e) {
@@ -64,10 +67,12 @@ function DoctorRegistration() {
         localStorage.setItem("doctorName", fullName);
         localStorage.setItem("doctorEmail", email);
         localStorage.setItem("doctorPhone", phone);
+        localStorage.setItem("doctorQualification", qualification);
         localStorage.setItem("doctorSpecialization", specialization);
         localStorage.setItem("doctorHospital", hospitalName);
         localStorage.setItem("doctorLicense", medicalLicenseNumber);
-
+        localStorage.setItem("doctorExperience", workingExperience);
+        localStorage.setItem("doctorClinicLocation", clinicLocation);
         // In a real application, you would upload the certificate to a server
         if (certificate) {
             localStorage.setItem("doctorCertificateName", certificate.name);
@@ -177,15 +182,43 @@ function DoctorRegistration() {
                         />
                     </div>
 
+                    {/* //Qualification */}
+                    <div className="mb-3">
+                        <label className="block text-gray-700 mb-2" htmlFor="qualification">Qualification *</label>
+                        <input
+                            required
+                            value={qualification}
+                            onChange={(e) => setQualification(e.target.value)}
+                            type="text"
+                            id="qualification"
+                            className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#1a79f7]"
+                            placeholder="e.g., MBBS,MD, DM"
+                        />
+                    </div>
+
                     {/* Hospital Name */}
                     <div className="mb-3">
-                        <label className="block text-gray-700 mb-2" htmlFor="hospitalName">Hospital Name *</label>
+                        <label className="block text-gray-700 mb-2" htmlFor="hospitalName">Hospital Name  / Clinic Name *</label>
                         <input
                             required
                             value={hospitalName}
                             onChange={(e) => setHospitalName(e.target.value)}
                             type="text"
                             id="hospitalName"
+                            className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#1a79f7]"
+                            placeholder="City Hospital"
+                        />
+                    </div>
+
+                    {/* Clinic Location */}
+                    <div className="mb-3">
+                        <label className="block text-gray-700 mb-2" htmlFor="clinicLocation">Clinic Location *</label>
+                        <input
+                            required
+                            value={clinicLocation}
+                            onChange={(e) => setClinicLocation(e.target.value)}
+                            type="text"
+                            id="clinicLocation"
                             className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#1a79f7]"
                             placeholder="City Hospital"
                         />
@@ -202,6 +235,18 @@ function DoctorRegistration() {
                             id="medicalLicenseNumber"
                             className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#1a79f7]"
                             placeholder="MED123456"
+                        />
+                    </div>
+                    <div className="mb-3">
+                        <label className="block text-gray-700 mb-2" htmlFor="workingExperience">Working Experience *</label>
+                        <input
+                            required
+                            value={workingExperience}
+                            onChange={(e) => setWorkingExperience(e.target.value)}
+                            type="text"
+                            id="workingExperience"
+                            className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#1a79f7]"
+                            placeholder="e.g., 5 years of experience in cardiology"
                         />
                     </div>
 

@@ -45,6 +45,8 @@ function Register() {
       navigate("/login");
     }, 1500); // Redirect after 1.5 seconds to show the success message
   }
+
+
   if (userType === "doctor") {
     navigate("/DoctorRegister");
     // Prevent rendering the user registration form

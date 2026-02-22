@@ -31,9 +31,6 @@ function Profile() {
 
   }
 
-
-
-
   return (
     <>
       <div className='mb-20 flex flex-col items-center min-h-screen w-full pt-24 px-4 pb-8 bg-gray-50'>

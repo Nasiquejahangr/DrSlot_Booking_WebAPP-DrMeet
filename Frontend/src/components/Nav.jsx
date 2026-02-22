@@ -6,6 +6,12 @@ import { CgProfile } from "react-icons/cg";
 import { Link } from 'react-router-dom';
 
 const Nav = () => {
+
+
+    if (localStorage.getItem("userType") === "doctor") {
+        return null; // Don't render the navigation bar for doctors
+    }
+
     return (
 
         <nav className="bottom-nav fixed bottom-0 left-0 w-full bg-white flex justify-around items-center p-4 border-t border-gray-300 z-50 font-roboto">

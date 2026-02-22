@@ -15,7 +15,7 @@ import Register from './pages/auth/User/Register';
 import PrivateRoute from "./components/PrivateRoute";
 import Dashboard from './pages/Doctor/Dashboard';
 import DoctorRegistration from './pages/auth/Doctor/DoctorRegistration';
-
+import Doctorprofile from './pages/Doctor/Doctorprofile';
 
 function App() {
 
@@ -24,8 +24,12 @@ function App() {
   const location = useLocation();
 
   // const hideLayout = location.pathname === "/login" || location.pathname === "/register";
-  const authRoutes = ["/login", "/register"];
+  const authRoutes = ["/login", "/register", "/DoctorRegister"];
   const hideLayout = authRoutes.includes(location.pathname);
+
+  // Show Logoandprofile only on landing page
+  const showLogoAndProfile = location.pathname === "/" && !hideLayout;
+
 
 
 
@@ -55,7 +59,7 @@ function App() {
       <ToastContainer position="top-right" autoClose={3000} />
 
       {/* Conditionally render Logoandprofile and Nav based on the current route */}
-      {!hideLayout && <Logoandprofile />}
+      {showLogoAndProfile && <Logoandprofile />}
       {!hideLayout && <Nav />}
 
       <AnimatePresence mode="wait" initial={false}>
@@ -107,6 +111,11 @@ function App() {
           <Route path='/DoctorRegister' element={
             <motion.div {...pageFade}>
               <DoctorRegistration />
+            </motion.div>
+          } />
+          <Route path='/DoctorProfile' element={
+            <motion.div {...pageFade}>
+              <Doctorprofile />
             </motion.div>
           } />
         </Routes>
