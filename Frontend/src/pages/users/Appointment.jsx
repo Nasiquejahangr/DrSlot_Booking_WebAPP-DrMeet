@@ -176,6 +176,11 @@ function Appointment() {
             </div>
           </div>
 
+
+
+
+
+
           {/* Appointments List */}
           {filteredAppointments.length === 0 ? (
             <div className="bg-white border-2 border-dashed border-gray-300 rounded-2xl p-16 text-center">
@@ -198,13 +203,14 @@ function Appointment() {
                 <div key={appointment.id} className="bg-white border border-gray-200 rounded-2xl p-6 shadow-sm hover:shadow-lg transition-all">
                   <div className="flex flex-col md:flex-row items-start gap-5">
                     {/* Doctor Image */}
-                    <div className="rounded-2xl w-20 h-20 flex items-center justify-center overflow-hidden bg-gradient-to-br from-blue-100 to-blue-50 flex-shrink-0 border-2 border-blue-200">
+                    <div className="rounded-2xl w-20 h-20 flex items-center justify-center overflow-hidden bg-linear-to-br from-blue-100 to-blue-50 flex-shrink-0 border-2 border-blue-200">
                       <img
                         src={appointment.image}
                         alt={appointment.doctorName}
                         className="w-full h-full object-cover"
                       />
                     </div>
+
 
                     {/* Appointment Details */}
                     <div className="flex-1 w-full">
@@ -218,6 +224,8 @@ function Appointment() {
                           {appointment.status.charAt(0).toUpperCase() + appointment.status.slice(1)}
                         </span>
                       </div>
+
+
 
                       {/* Date, Time, Location */}
                       <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 my-4 bg-gray-50 p-4 rounded-xl">

@@ -1,34 +1,35 @@
 import React from 'react'
 import DoctorCard from '../../components/DoctorCard'
 import { IoIosArrowRoundBack } from "react-icons/io";
+import { useState } from 'react';
 
 function SearchDoct() {
 
   //passing props from doctor registraction page from local storage and then displaying it in the doctor card component and then in the doctor profile page as well
+  //create array of doctor data and then pass it to the doctor card component and then display it in the doctor profile page as well
 
-  const doctorName = localStorage.getItem('doctorName') || 'Unknown Doctor';
-  const doctorSpecialty = localStorage.getItem('doctorSpecialization') || 'General Physician';
-  const doctorLocation = localStorage.getItem('doctorClinicLocation') || 'India';
-  const doctorRating = localStorage.getItem('doctorRating') || '4.5';
-  const doctorExperience = localStorage.getItem('doctorExperience') || '0 years';
-  const doctorFee = localStorage.getItem('doctorFee') || '500';
-  const doctorQualification = localStorage.getItem('doctorQualification') || 'MBBS, MD';
-  const doctorProfileImage = localStorage.getItem('doctorProfileImage') || null;
+  const [doctors, setDoctors] = useState([]);
 
+  React.useEffect(() => {
+    const storedDoctors = JSON.parse(localStorage.getItem("doctors")) || [];
 
-  // Destructure doctor data for easier access
-  const { name, specialty, location, rating, experience, fee, qualification, profileimage } = {
-    name: doctorName,
-    specialty: doctorSpecialty,
-    location: doctorLocation,
-    rating: doctorRating,
-    experience: doctorExperience,
-    fee: doctorFee,
-    qualification: doctorQualification,
-    profileimage: doctorProfileImage
-  };
+    // Map stored doctors to match your DoctorCard props
+    const formattedDoctors = storedDoctors.map((doc) => ({
+      name: doc.fullName,
+      specialty: doc.specialization,
+      location: doc.clinicLocation,
+      rating: doc.rating || "4.5",
+      experience: doc.workingExperience,
+      fee: doc.fee || "500",
+      qualification: doc.qualification,
+      profileImage: doc.profileImage || null,
+      hospitalName: doc.hospitalName || null
 
+    }));
 
+    setDoctors(formattedDoctors);
+  }, []);
+  // For demonstration, we can create an array of doctors with the same data
 
   return (
     <>
@@ -45,18 +46,21 @@ function SearchDoct() {
       </div>
 
       <div className=" p-3 mb-20 gap-5 flex flex-col w-[98%] mx-auto">
-        <DoctorCard
-          name={name}
-          specialty={specialty}
-          location={location}
-          rating={rating}
-          experience={experience}
-          fee={fee}
-          profileimage={profileimage}
-          qualification={qualification} />
+        {doctors.map((doctor, index) => (
+          <DoctorCard
+            key={index}
+            name={doctor.name}
+            specialty={doctor.specialty}
+            location={doctor.location}
+            rating={doctor.rating}
+            experience={doctor.experience}
+            fee={doctor.fee}
+            profileImage={doctor.profileImage}
+            qualification={doctor.qualification}
+            hospitalName={`Hospital- ${doctor.hospitalName}`} />
+        ))}
       </div>
     </>
   )
 }
-
 export default SearchDoct

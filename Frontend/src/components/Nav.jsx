@@ -8,6 +8,10 @@ import { Link } from 'react-router-dom';
 const Nav = () => {
 
 
+
+
+
+
     if (localStorage.getItem("userType") === "doctor") {
         return null; // Don't render the navigation bar for doctors
     }

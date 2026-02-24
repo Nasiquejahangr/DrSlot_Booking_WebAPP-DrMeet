@@ -1,11 +1,10 @@
-import React from 'react'
-import { useState } from 'react';
-import Logo from '../../../assets/Logo.svg'
+import React, { useState, useEffect } from 'react';
+import Logo from '../../../assets/Logo.svg';
 import { toast } from 'react-toastify';
 import { useNavigate } from 'react-router-dom';
-import Render from '../../../components/Render';
 
 function Register() {
+
   const navigate = useNavigate();
 
   const [fullName, setFullName] = useState("");
@@ -15,169 +14,171 @@ function Register() {
   const [phoneNumber, setPhoneNumber] = useState("");
   const [userType, setUserType] = useState("user");
 
+  // ✅ Redirect properly when doctor selected
+  useEffect(() => {
+    if (userType === "doctor") {
+      navigate("/DoctorRegister");
+    }
+  }, [userType, navigate]);
+
   function handleSubmit(e) {
     e.preventDefault();
 
-    // Validate passwords match
     if (password !== confirmPassword) {
       toast.error("Passwords do not match!");
       return;
     }
+
     if (!/^\d{10}$/.test(phoneNumber)) {
       toast.error("Please enter a valid 10-digit phone number!");
       return;
     }
 
-    // Save user data to localStorage
+    // 🔥 Multi-user support (array based)
+    const existingUsers = JSON.parse(localStorage.getItem("users")) || [];
+
+    const emailExists = existingUsers.find(user => user.email === email);
+
+    if (emailExists) {
+      toast.error("User already registered with this email!");
+      return;
+    }
+
+    const newUser = {
+      id: Date.now(),
+      fullName,
+      email,
+      password,
+      phoneNumber,
+      role: "user"
+    };
+
+    existingUsers.push(newUser);
+
+    localStorage.setItem("users", JSON.stringify(existingUsers));
+
+    // Set login session
     localStorage.setItem("token", "userLoggedIn");
-    localStorage.setItem("userName", fullName);
-    localStorage.setItem("userEmail", email);
-    localStorage.setItem("userPhone", phoneNumber);
-    localStorage.setItem("userType", userType);
-    localStorage.setItem("isDoctor", userType === "doctor" ? "true" : "false");
+    localStorage.setItem("userType", "user");
+    localStorage.setItem("currentUserId", newUser.id);
 
-    // You can also add age, gender, city fields later if needed
+    toast.success("User registration successful!");
 
-    toast.success(`${userType === "doctor" ? "Doctor" : "User"} registration successful!`);
-
-    // Redirect to login or home page after a short delay
     setTimeout(() => {
       navigate("/login");
-    }, 1500); // Redirect after 1.5 seconds to show the success message
-  }
-
-
-  if (userType === "doctor") {
-    navigate("/DoctorRegister");
-    // Prevent rendering the user registration form
+    }, 1500);
   }
 
   return (
-    <>
-      <div className='flex justify-center align-bottom mt-20'>
-        <form
-          onSubmit={handleSubmit}
-          className="flex flex-col bg-white justify-center p-10 rounded-2xl shadow-[0_0_30px_rgba(0,0,0,0.15)] w-[95%] gap-5"
+    <div className='flex justify-center align-bottom mt-20'>
+      <form
+        onSubmit={handleSubmit}
+        className="flex flex-col bg-white justify-center p-10 rounded-2xl shadow-[0_0_30px_rgba(0,0,0,0.15)] w-[95%] gap-5"
+      >
+        <div className='flex justify-center mb-4'>
+          <img src={Logo} alt="Logo" className='w-20 h-20 object-contain' />
+        </div>
+
+        <h2 className="text-2xl text-center font-bold mb-6 text-gray-700">
+          Registration
+        </h2>
+
+        {/* User Type */}
+        <div className="mb-4">
+          <label className="block text-center text-gray-700 mb-3 font-semibold">
+            Register as
+          </label>
+
+          <div className="flex gap-6 justify-center">
+            <label className="flex items-center cursor-pointer">
+              <input
+                type="radio"
+                name="userType"
+                value="user"
+                checked={userType === "user"}
+                onChange={(e) => setUserType(e.target.value)}
+                className="mr-2 w-4 h-4 text-[#1a79f7]"
+              />
+              <span>User</span>
+            </label>
+
+            <label className="flex items-center cursor-pointer">
+              <input
+                type="radio"
+                name="userType"
+                value="doctor"
+                checked={userType === "doctor"}
+                onChange={(e) => setUserType(e.target.value)}
+                className="mr-2 w-4 h-4 text-[#1a79f7]"
+              />
+              <span>Doctor</span>
+            </label>
+          </div>
+        </div>
+
+        {/* Form Fields */}
+        <input
+          required
+          value={fullName}
+          onChange={(e) => setFullName(e.target.value)}
+          type="text"
+          placeholder="Full Name"
+          className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#1a79f7]"
+        />
+
+        <input
+          required
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          type="email"
+          placeholder="Email"
+          className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#1a79f7]"
+        />
+
+        <input
+          required
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+          type="password"
+          placeholder="Password"
+          className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#1a79f7]"
+        />
+
+        <input
+          required
+          value={confirmPassword}
+          onChange={(e) => setConfirmPassword(e.target.value)}
+          type="password"
+          placeholder="Confirm Password"
+          className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#1a79f7]"
+        />
+
+        <input
+          required
+          value={phoneNumber}
+          onChange={(e) => setPhoneNumber(e.target.value)}
+          type="tel"
+          placeholder="Phone Number"
+          className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#1a79f7]"
+        />
+
+        <button
+          type="submit"
+          className="w-full bg-[#1a79f7] hover:bg-[#104b9a] text-white font-bold py-3 rounded-xl transition-colors"
         >
-          <div className='flex justify-center mb-4'>
-            <img src={Logo} alt="Logo" className='w-20 h-20 object-contain' />
-          </div>
-          <h2 className="text-2xl text-center font-bold mb-6 text-gray-700">Registration</h2>
+          Register
+        </button>
 
-          {/*  User type selection */}
-          <div className="mb-4">
-            <label className="block text-center text-gray-700 mb-3 font-semibold">Register as</label>
-            <div className="flex gap-6 justify-center">
-              <label className="flex items-center cursor-pointer">
-                <input
-                  type="radio"
-                  name="userType"
-                  value="user"
-                  checked={userType === "user"}
-                  onChange={(e) => setUserType(e.target.value)}
-                  className="mr-2 w-4 h-4 text-[#1a79f7] focus:ring-[#1a79f7]"
-                />
-                <span className="text-gray-700">User</span>
-              </label>
+        <p className="text-center text-gray-700 mt-4">
+          Already have an account?
+          <a href="/login" className="text-[#1563d1] font-bold hover:underline ml-1">
+            Login
+          </a>
+        </p>
 
-              {/* // Doctor option */}
-              <label className="flex items-center cursor-pointer">
-                <input
-                  type="radio"
-                  name="userType"
-                  value="doctor"
-                  checked={userType === "doctor"}
-                  onChange={(e) => setUserType(e.target.value)}
-                  className="mr-2 w-4 h-4 text-[#1a79f7] focus:ring-[#1a79f7]"
-                />
-                <span className="text-gray-700">Doctor</span>
-              </label>
-            </div>
-          </div>
-
-
-          <div className="mb-4">
-            <label className="block text-gray-700 mb-2" htmlFor="fullName">Full Name</label>
-            <input
-              required
-              value={fullName}
-              onChange={(e) => setFullName(e.target.value)}
-              type="text"
-              id="fullName"
-              className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#1a79f7]"
-              placeholder="Enter your full name"
-            />
-          </div>
-
-          <div className="mb-4">
-            <label className="block text-gray-700 mb-2" htmlFor="email">Email</label>
-            <input
-              required
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              type="email"
-              id="email"
-              className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#1a79f7]"
-              placeholder="Enter your email"
-            />
-          </div>
-
-
-          <div className="mb-4">
-            <label className="block text-gray-700 mb-2" htmlFor="password">Password</label>
-            <input
-              required
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              type="password"
-              id="password"
-              className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#1a79f7]"
-              placeholder="Enter your password"
-            />
-          </div>
-
-
-          <div className="mb-4">
-            <label className="block text-gray-700 mb-2" htmlFor="confirmPassword">Confirm Password</label>
-            <input
-              required
-              value={confirmPassword}
-              onChange={(e) => setConfirmPassword(e.target.value)}
-              type="password"
-              id="confirmPassword"
-              className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#1a79f7]"
-              placeholder="Confirm your password"
-            />
-          </div>
-
-
-          <div className="mb-6">
-            <label className="block text-gray-700 mb-2" htmlFor="phoneNumber">Phone Number</label>
-            <input
-              required
-              value={phoneNumber}
-              onChange={(e) => setPhoneNumber(e.target.value)}
-              type="tel"
-              id="phoneNumber"
-              className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#1a79f7]"
-              placeholder="Enter your phone number"
-            />
-          </div>
-
-          <button
-            type="submit"
-            className="w-full bg-[#1a79f7] hover:bg-[#104b9a] text-white font-bold py-3 rounded-xl transition-colors"
-          >
-            Register
-          </button>
-
-          <p className="text-center text-gray-700 mt-4">
-            Already have an account? <a href="/login" className="text-[#1563d1] font-bold hover:underline">Login</a>
-          </p>
-        </form>
-      </div>
-    </>
-  )
+      </form>
+    </div>
+  );
 }
 
 export default Register;

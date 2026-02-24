@@ -4,16 +4,27 @@ import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
 
 function Dashboard() {
-    const navigate = useNavigate();
 
-    // Get doctor info from localStorage
-    const doctorName = localStorage.getItem('doctorName') || 'Doctor';
-    const doctorEmail = localStorage.getItem('doctorEmail') || 'nasiquejahangir000@gmail.com';
+    const navigate = useNavigate();
+    //i want to remove nav if user == doctor
+    if (localStorage.getItem("userType") !== "doctor") {
+        navigate('/login');
+    }
+    //  Get doctors array
+    const doctors = JSON.parse(localStorage.getItem("doctors")) || [];
+    const currentDoctorId = localStorage.getItem("currentDoctorId");
+
+    //  Find current doctor
+    const currentDoctor = doctors.find(
+        doc => doc.id == currentDoctorId
+    ) || {};
+    const doctorName = currentDoctor.fullName || "Doctor";
+    const doctorEmail = currentDoctor.email || "No Email";
 
     const handleLogout = () => {
         localStorage.removeItem('token');
         localStorage.removeItem('userType');
-        localStorage.removeItem('isDoctor');
+        localStorage.removeItem('currentDoctorId');
         toast.success('Logged out successfully!');
         navigate('/login');
     };
@@ -78,75 +89,74 @@ function Dashboard() {
     ];
 
     return (
-
-
         <div className="p-2 mt-2 cursor-pointer">
 
             {/* Doctor Profile Card */}
-            <div className="bg-linear-to-r from-blue-50 to-cyan-50 rounded-2xl shadow-lg border
-             border-blue-100 p-6 mb-6 hover:shadow-xl transition-shadow duration-300">
+            <div className="bg-linear-to-r from-blue-50 to-cyan-50 rounded-2xl shadow-lg border border-blue-100 p-6 mb-6">
                 <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                     <div className="flex items-center gap-4">
-                        <div className="w-16 h-16 bg-blue-500 to-cyan-500 rounded-full flex items-center justify-center shadow-md ">
-                            <HiUser className="w-10 h-10 text-white" />
+                        <div className="w-16 h-16 bg-blue-500 rounded-full flex items-center justify-center shadow-md">
+                            {currentDoctor.profileImage ? (
+                                <img
+                                    src={currentDoctor.profileImage}
+                                    alt="Doctor Profile"
+                                    className="w-full h-full object-cover rounded-full"
+                                />
+                            ) : (
+                                <HiUser className="w-10 h-10 text-white" />
+                            )}
                         </div>
                         <div className="min-w-0 flex-1">
-                            <h2 className="text-xl sm:text-2xl font-bold text-gray-800 mb-1 truncate">{doctorName}</h2>
-                            <p className="text-gray-600 text-sm truncate">{doctorEmail}</p>
+                            <h2 className="text-xl sm:text-2xl font-bold text-gray-800 mb-1 truncate">
+                                {`Dr. ${doctorName}`}
+                            </h2>
+                            <p className="text-gray-600 text-sm truncate">
+                                {doctorEmail}
+                            </p>
                         </div>
                     </div>
-                    <button className="bg-blue-600 hover:from-blue-600 hover:to-blue-800 text-white px-6 py-2.5
-                     rounded-xl text-sm font-medium shadow-md 
-                    hover:shadow-lg transition-all duration-300 whitespace-nowrap  
-                    w-full sm:w-auto"
+
+                    <button
+                        className="bg-blue-600 text-white px-6 py-2.5 rounded-xl text-sm font-medium shadow-md w-full sm:w-auto"
                         onClick={() => navigate('/DoctorProfile')}
                     >
                         View Profile
                     </button>
                 </div>
 
-
                 <div className="mt-4 sm:mt-6">
-                    <button className="w-full bg-white rounded-2xl shadow-sm border border-gray-200 p-4 hover:shadow-md transition-shadow text-left
-                     flex items-center justify-center gap-2 text-red-600"
+                    <button
+                        onClick={() => navigate('/DoctorProfile')}
+                        className="w-full bg-white rounded-2xl shadow-sm border border-gray-200 p-4 text-left flex items-center justify-center gap-2 text-blue-600"
                     >
                         Edit Profile
                     </button>
                 </div>
             </div>
 
-
-
-            {/* Stats Grid */}
-            <div className=" flex flex-wrap justify-around w-full gap-y-6 mb-6" >
-
-                {/* // Map through stats and render each card and display the relevant info */}
-                {/* // just make one card and then map through the rest of the stats to render the other cards */}
-                {
-                    stats.map((stat, index) => {
-                        const Icon = stat.icon;
-                        return (
-                            <div key={index} className="bg-white w-40 h-40 rounded-2xl shadow-sm border border-gray-200 p-6">
-                                <div className="flex items-start gap-3 mb-4">
-                                    <div className={`${stat.bgColor} p-2 rounded-lg`}>
-                                        <Icon className={`w-6 h-6 ${stat.color}`} />
-                                    </div>
-                                    <span className="text-gray-600 text-sm">{stat.label}</span>
+            {/* Stats */}
+            <div className="flex flex-wrap justify-around w-full gap-y-6 mb-6">
+                {stats.map((stat, index) => {
+                    const Icon = stat.icon;
+                    return (
+                        <div key={index} className="bg-white w-40 h-40 rounded-2xl shadow-sm border border-gray-200 p-6">
+                            <div className="flex items-start gap-3 mb-4">
+                                <div className={`${stat.bgColor} p-2 rounded-lg`}>
+                                    <Icon className={`w-6 h-6 ${stat.color}`} />
                                 </div>
-                                <div>
-                                    <h3 className="text-4xl font-bold text-gray-900 mb-1">{stat.value}</h3>
-                                    <p className="text-gray-600 text-sm">{stat.subtitle}</p>
-                                </div>
+                                <span className="text-gray-600 text-sm">{stat.label}</span>
                             </div>
-                        );
-                    })
-                }
-            </div >
+                            <div>
+                                <h3 className="text-4xl font-bold text-gray-900 mb-1">{stat.value}</h3>
+                                <p className="text-gray-600 text-sm">{stat.subtitle}</p>
+                            </div>
+                        </div>
+                    );
+                })}
+            </div>
 
-
-
-            {/* Earnings Card */}
-            < div className=" from-blue-50 to-cyan-50 rounded-2xl shadow-sm border border-gray-200 p-6" >
+            {/* Earnings */}
+            <div className="rounded-2xl shadow-sm border border-gray-200 p-6">
                 <div className="flex items-center justify-between">
                     <div className="flex items-center gap-4">
                         <div className="w-12 h-12 bg-blue-600 rounded-full flex items-center justify-center">
@@ -161,17 +171,16 @@ function Dashboard() {
                         <HiTrendingUp className="w-6 h-6 text-cyan-600" />
                     </div>
                 </div>
-                <button className="flex items-center gap-2 text-gray-600 text-sm mt-4 hover:text-blue-600 transition-colors">
-                    <span>Tap to view detailed analytics</span>
-                    <HiArrowRight className="w-4 h-4" />
-                </button>
-            </div >
+            </div>
 
-            {/* Quick Actions Section */}
-            < div className="mt-8 cursor-pointer" >
-                <h2 className="text-2xl font-bold text-gray-800 mb-4">Quick Actions</h2>
 
-                <div className="space-y-4 cursor-pointer">
+            {/* // Quick Actions */}
+            <div className="mt-8 cursor-pointer">
+                <h2 className="text-2xl font-bold text-gray-800 mb-4 text-center">
+                    Quick Actions
+                </h2>
+
+                <div className="space-y-4">
                     {quickActions.map((action, index) => {
                         const Icon = action.icon;
                         return (
@@ -184,30 +193,38 @@ function Dashboard() {
                                         <Icon className={`w-7 h-7 ${action.iconColor}`} />
                                     </div>
                                     <div>
-                                        <h3 className="text-lg font-bold text-gray-800">{action.title}</h3>
-                                        <p className="text-gray-600 text-sm">{action.description}</p>
+                                        <h3 className="text-lg font-bold text-gray-800">
+                                            {action.title}
+                                        </h3>
+                                        <p className="text-gray-600 text-sm">
+                                            {action.description}
+                                        </p>
                                     </div>
                                 </div>
                             </button>
                         );
                     })}
                 </div>
+            </div>
 
-                {/* Logout Button */}
-                <button
-                    onClick={handleLogout}
-                    className="mb-20 w-full bg-white rounded-2xl shadow-sm border border-gray-200 p-6 hover:shadow-md transition-shadow mt-4"
-                >
-                    <div className="flex items-center justify-center gap-2 text-red-600">
-                        <HiLogout className="w-5 h-5" />
-                        <span className="text-lg font-semibold"
-                            onClick={handleLogout}
-                        >Logout</span>
-                    </div>
-                </button>
-            </div >
+
+
+
+
+
+
+            {/* Logout */}
+            <button
+                onClick={handleLogout}
+                className="mb-20 w-full bg-white rounded-2xl shadow-sm border border-gray-200 p-6 mt-6"
+            >
+                <div className="flex items-center justify-center gap-2 text-red-600">
+                    <HiLogout className="w-5 h-5" />
+                    <span className="text-lg font-semibold">Logout</span>
+                </div>
+            </button>
         </div>
-
     )
 }
+
 export default Dashboard;

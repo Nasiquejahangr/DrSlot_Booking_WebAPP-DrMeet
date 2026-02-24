@@ -9,7 +9,7 @@ function DoctorCard(props) {
                 {/* Avatar */}
                 <div className='rounded-full w-20 h-20 flex items-center justify-center overflow-hidden bg-gray-100'>
                     <img
-                        src={props.profileimage || 'https://via.placeholder.com/150'}
+                        src={props.profileImage || 'https://via.placeholder.com/150'}
                         alt={props.name}
                         className="w-full h-full object-cover"
                     />
@@ -32,7 +32,8 @@ function DoctorCard(props) {
 
                     <div className="flex items-center gap-1 text-gray-600">
                         <FaMapMarkerAlt className="w-3 h-3" />
-                        <span className="text-sm">{props.location || 'India'}</span>
+                        <span className="text-sm font-semibold">{props.location || 'India'}</span>
+                        <p className='text-sm  mx-7 font-sans font-medium'>{props.hospitalName}</p>
                     </div>
                 </div>
             </div>
