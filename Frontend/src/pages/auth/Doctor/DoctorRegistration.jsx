@@ -18,6 +18,8 @@ function DoctorRegistration() {
     const [clinicLocation, setClinicLocation] = useState("");
     const [qualification, setQualification] = useState("");
     const [certificate, setCertificate] = useState(null);
+    const [fee, setFee] = useState("");
+
 
     function handleFileChange(e) {
         //  Handle certificate upload with validation
@@ -41,8 +43,11 @@ function DoctorRegistration() {
         }
     }
 
+
+
     function handleSubmit(e) {
         e.preventDefault();
+
 
         // Password validation
         if (password !== confirmPassword) {
@@ -62,11 +67,17 @@ function DoctorRegistration() {
             return;
         }
 
-        // Get existing doctors array
-        const existingDoctors = JSON.parse(localStorage.getItem("doctors")) || [];
+
+
+        if (fee <= 0 || fee > 1000) {
+            toast.error("Please enter a valid fee (between 0 and 1000)!");
+            return;
+        }
+        // Get existing doctors array AND check for duplicates
+        const doctorarray = JSON.parse(localStorage.getItem("doctors")) || [];
 
         //  Check duplicate email
-        const emailExists = existingDoctors.find(doc => doc.email === email);
+        const emailExists = doctorarray.find(doc => doc.email === email);
 
         if (emailExists) {
             toast.error("Doctor already registered with this email!");
@@ -86,16 +97,21 @@ function DoctorRegistration() {
             medicalLicenseNumber,
             workingExperience,
             clinicLocation,
+            fee,
             certificate: certificate ? certificate.name : null,
             profileImage: null,
-            about: 'I am a dedicated healthcare professional committed to providing exceptional patient care...'
+            about: 'I am a dedicated healthcare professional committed to providing exceptional patient care...',
+            //slot for user managed by doctor in dashboard
+            slots: {}
         };
 
         //  Add to array
-        existingDoctors.push(newDoctor);
+        doctorarray.push(newDoctor);
 
         //  Save back to localStorage
-        localStorage.setItem("doctors", JSON.stringify(existingDoctors));
+        localStorage.setItem("doctors", JSON.stringify(doctorarray));
+
+
 
         // Save login session
         localStorage.setItem("token", "doctorLoggedIn");
@@ -114,8 +130,7 @@ function DoctorRegistration() {
             <div className='flex justify-center align-bottom mt-10 mb-20'>
                 <form
                     onSubmit={handleSubmit}
-                    className="flex flex-col bg-white justify-center p-10 rounded-2xl shadow-[0_0_30px_rgba(0,0,0,0.15)] w-[95%] max-w-2xl gap-5"
-                >
+                    className="flex flex-col bg-white justify-center p-10 rounded-2xl shadow-[0_0_30px_rgba(0,0,0,0.15)] w-[95%] max-w-2xl gap-5">
                     <div className='flex justify-center mb-2'>
                         <img src={Logo} alt="Logo" className='w-20 h-20 object-contain' />
                     </div>
@@ -257,34 +272,75 @@ function DoctorRegistration() {
                         />
                     </div>
 
-                    {/* Experience */}
+
+                    {/* fees */}
+                    <div className="mb-3">
+                        <label className="block text-gray-700 mb-2">Fee *</label>
+                        <input
+                            required
+                            value={fee}
+                            onChange={(e) => setFee(e.target.value)}
+                            type="number"
+                            className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#1a79f7]"
+                            placeholder="500"
+                        />
+                    </div>
+
+                    {/* Working Experience */}
                     <div className="mb-3">
                         <label className="block text-gray-700 mb-2">Working Experience *</label>
                         <input
                             required
                             value={workingExperience}
                             onChange={(e) => setWorkingExperience(e.target.value)}
-                            type="text"
+                            type="number"
                             className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#1a79f7]"
                             placeholder="5 years"
                         />
                     </div>
 
+
                     {/* Certificate */}
                     <div className="mb-4">
-                        <label className="block text-gray-700 mb-2">
-                            Upload Certificate (Optional)
+                        <label className="block text-gray-700 font-semibold mb-3">
+                            Upload Certificate <span className="text-sm font-normal text-gray-500">(Optional)</span>
                         </label>
-                        <input
-                            onChange={handleFileChange}
-                            type="file"
-                            accept=".pdf,.jpg,.jpeg,.png"
-                            className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#1a79f7]"
-                        />
+                        <div className="relative">
+                            <input
+                                onChange={handleFileChange}
+                                type="file"
+                                accept=".pdf,.jpg,.jpeg,.png"
+                                id="certificate-upload"
+                                className="hidden"
+                            />
+                            <label
+                                htmlFor="certificate-upload"
+                                className="flex items-center justify-center w-full px-4 py-8 border-2 border-dashed border-[#1a79f7] rounded-lg cursor-pointer hover:bg-blue-50 transition-all duration-200"
+                            >
+                                <div className="text-center">
+                                    <p className="text-2xl mb-2">📄</p>
+                                    <p className="text-[#1a79f7] font-semibold mb-1">Click to upload certificate</p>
+                                    <p className="text-sm text-gray-500">PDF, JPG, PNG (Max 5MB)</p>
+                                </div>
+                            </label>
+                        </div>
                         {certificate && (
-                            <p className="text-sm text-green-600 mt-2">
-                                ✓ {certificate.name}
-                            </p>
+                            <div className="mt-3 p-4 bg-green-50 border border-green-200 rounded-lg flex items-center justify-between">
+                                <div className="flex items-center gap-3">
+                                    <span className="text-green-600 text-xl">✓</span>
+                                    <div>
+                                        <p className="text-sm text-gray-700 font-medium">{certificate.name}</p>
+                                        <p className="text-xs text-gray-500">{(certificate.size / 1024).toFixed(2)} KB</p>
+                                    </div>
+                                </div>
+                                <button
+                                    type="button"
+                                    onClick={() => setCertificate(null)}
+                                    className="text-red-500 hover:text-red-700 hover:bg-red-50 px-3 py-1 rounded transition-colors text-sm font-semibold"
+                                >
+                                    ✕ Remove
+                                </button>
+                            </div>
                         )}
                     </div>
 

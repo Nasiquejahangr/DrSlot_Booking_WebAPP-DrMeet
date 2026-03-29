@@ -21,6 +21,9 @@ function Register() {
     }
   }, [userType, navigate]);
 
+
+
+
   function handleSubmit(e) {
     e.preventDefault();
 
@@ -34,16 +37,16 @@ function Register() {
       return;
     }
 
-    // 🔥 Multi-user support (array based)
-    const existingUsers = JSON.parse(localStorage.getItem("users")) || [];
 
-    const emailExists = existingUsers.find(user => user.email === email);
 
+    // IMPORTANT: In a real application, you would never store passwords in localStorage or handle authentication like this. This is purely for demonstration purposes and should not be used in production.
+    //  Multi-user support (array based)
+    const userarray = JSON.parse(localStorage.getItem("users")) || [];
+    const emailExists = userarray.find(user => user.email === email);
     if (emailExists) {
       toast.error("User already registered with this email!");
       return;
     }
-
     const newUser = {
       id: Date.now(),
       fullName,
@@ -52,10 +55,10 @@ function Register() {
       phoneNumber,
       role: "user"
     };
+    userarray.push(newUser);
+    localStorage.setItem("users", JSON.stringify(userarray));
 
-    existingUsers.push(newUser);
 
-    localStorage.setItem("users", JSON.stringify(existingUsers));
 
     // Set login session
     localStorage.setItem("token", "userLoggedIn");
@@ -67,6 +70,8 @@ function Register() {
     setTimeout(() => {
       navigate("/login");
     }, 1500);
+
+
   }
 
   return (

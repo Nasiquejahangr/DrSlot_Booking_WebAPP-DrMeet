@@ -14,7 +14,7 @@ const iconMap = {
     'General': { icon: FaStethoscope, bgColor: 'bg-blue-100', iconColor: 'text-[#1a79f7]' },
 };
 
-function DoctorType(props) {
+function HomePageDoctorIcon(props) {
     const icon = iconMap[props.type] || iconMap['General'];
     const IconComponent = icon.icon;
     const navigate = useNavigate();
@@ -41,4 +41,4 @@ function DoctorType(props) {
     )
 }
 
-export default DoctorType
+export default HomePageDoctorIcon

@@ -7,16 +7,11 @@ function Profile() {
   //use navigate hook for redirection after logout
   const navigate = useNavigate();
 
-  // Get user data from localStorage or props (you can modify this to use context/redux)
-  const userData = {
-    name: localStorage.getItem('userName') || 'Md Nasique',
-    email: localStorage.getItem('userEmail') || 'nasiquejahangir000@gmail.com',
-    phone: localStorage.getItem('userPhone') || 'Not provided',
-    age: localStorage.getItem('userAge') || '22',
-    gender: localStorage.getItem('userGender') || 'Male',
-    city: localStorage.getItem('userCity') || 'Mumbai',
-    role: 'Patient'
-  };
+  // Get user data from localStorage
+  const currentUserId = localStorage.getItem("currentUserId");
+  const usersArray = JSON.parse(localStorage.getItem("users")) || [];
+  const userData = usersArray.find(user => user.id === parseInt(currentUserId)) || {};
+
 
 
   // Logout function
@@ -65,7 +60,7 @@ function Profile() {
             <FaPhone className='w-5 h-5 text-gray-500 mt-1' />
             <div>
               <p className='text-gray-500 text-sm mb-1'>Phone</p>
-              <p className='text-gray-800 font-medium'>{userData.phone}</p>
+              <p className='text-gray-800 font-medium'>{userData.phoneNumber}</p>
             </div>
           </div>
 
@@ -74,7 +69,7 @@ function Profile() {
             <FaUser className='w-5 h-5 text-gray-500 mt-1' />
             <div>
               <p className='text-gray-500 text-sm mb-1'>Age & Gender</p>
-              <p className='text-gray-800 font-medium'>{userData.age} Years • {userData.gender}</p>
+              <p className='text-gray-800 font-medium'>{userData.age || "20"} Years • {userData.gender}</p>
             </div>
           </div>
 
@@ -83,7 +78,7 @@ function Profile() {
             <FaMapMarkerAlt className='w-5 h-5 text-gray-500 mt-1' />
             <div>
               <p className='text-gray-500 text-sm mb-1'>City</p>
-              <p className='text-gray-800 font-medium'>{userData.city}</p>
+              <p className='text-gray-800 font-medium'>{userData.city || "India"}</p>
             </div>
           </div>
         </div>

@@ -1,7 +1,9 @@
 import React from 'react'
 import { FaStar, FaMapMarkerAlt } from "react-icons/fa";
+import { useNavigate } from 'react-router-dom';
 
 function DoctorCard(props) {
+    const navigate = useNavigate();
     return (
         <div className="bg-white border border-gray-200 rounded-2xl p-5 shadow-sm hover:shadow-lg transition-shadow">
             {/* Doctor Info Section */}
@@ -50,7 +52,7 @@ function DoctorCard(props) {
                 </div>
                 <button
                     className="bg-[#1a79f7] hover:bg-[#1563d1] text-white font-semibold py-2 px-6 rounded-lg transition-colors"
-                    onClick={() => alert("Viewing slots for " + props.name)}
+                    onClick={() => navigate(`/doctor/${props.id}`)}
                 >
                     View Slots
                 </button>

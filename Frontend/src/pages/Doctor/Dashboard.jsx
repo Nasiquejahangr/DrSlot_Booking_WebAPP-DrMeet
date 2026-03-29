@@ -42,7 +42,8 @@ function Dashboard() {
             title: 'Manage Slots',
             description: 'Set your availability',
             bgColor: 'bg-blue-50',
-            iconColor: 'text-blue-600'
+            iconColor: 'text-blue-600',
+            onClick: () => navigate('/ManageSlot')
         },
         {
             icon: HiCalendar,
@@ -88,6 +89,70 @@ function Dashboard() {
         }
     ];
 
+
+
+    // const [selectedDate, setSelectedDate] = useState("");
+    // const [selectedTime, setSelectedTime] = useState("");
+
+    // const handleAddSlot = () => {
+
+    //     if (!selectedDate || !selectedTime) {
+    //         alert("Please select date and time");
+    //         return;
+    //     }
+
+    //     // 1️⃣ Get doctors from localStorage
+    //     const doctors = JSON.parse(localStorage.getItem("doctors")) || [];
+
+    //     // 2️⃣ Get current doctor id
+    //     const currentDoctorId = Number(localStorage.getItem("currentDoctorId"));
+
+    //     // 3️⃣ Find doctor index
+    //     const doctorIndex = doctors.findIndex(
+    //         doc => doc.id === currentDoctorId
+    //     );
+
+    //     if (doctorIndex === -1) {
+    //         alert("Doctor not found");
+    //         return;
+    //     }
+
+    //     // 4️⃣ Ensure slots object exists
+    //     if (!doctors[doctorIndex].slots) {
+    //         doctors[doctorIndex].slots = {};
+    //     }
+
+    //     // 5️⃣ If date doesn't exist → create empty array
+    //     if (!doctors[doctorIndex].slots[selectedDate]) {
+    //         doctors[doctorIndex].slots[selectedDate] = [];
+    //     }
+
+    //     // 6️⃣ Prevent duplicate slot
+    //     const slotExists = doctors[doctorIndex].slots[selectedDate].some(
+    //         slot => slot.time === selectedTime
+    //     );
+
+    //     if (slotExists) {
+    //         alert("Slot already exists for this time");
+    //         return;
+    //     }
+
+    //     // 7️⃣ Push new slot
+    //     doctors[doctorIndex].slots[selectedDate].push({
+    //         time: selectedTime,
+    //         isBooked: false
+    //     });
+
+    //     // 8️⃣ Save back to localStorage
+    //     localStorage.setItem("doctors", JSON.stringify(doctors));
+
+    //     alert("Slot added successfully");
+
+    //     // Clear fields
+    //     setSelectedDate("");
+    //     setSelectedTime("");
+
+    // }
     return (
         <div className="p-2 mt-2 cursor-pointer">
 
@@ -186,6 +251,7 @@ function Dashboard() {
                         return (
                             <button
                                 key={index}
+                                onClick={action.onClick}
                                 className="w-full bg-white rounded-2xl shadow-sm border border-gray-200 p-6 hover:shadow-md transition-shadow text-left"
                             >
                                 <div className="flex items-center gap-4">
@@ -206,9 +272,6 @@ function Dashboard() {
                     })}
                 </div>
             </div>
-
-
-
 
 
 

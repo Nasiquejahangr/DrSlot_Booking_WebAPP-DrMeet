@@ -1,54 +1,146 @@
 import React from 'react'
-import DoctorCard from '../../components/DoctorCard'
 import { IoIosArrowRoundBack } from "react-icons/io";
 import { useState } from 'react';
+import DoctorCard from '../../components/Doctorcard';
+import { useNavigate } from 'react-router-dom';
 
 function SearchDoct() {
 
-  //passing props from doctor registraction page from local storage and then displaying it in the doctor card component and then in the doctor profile page as well
-  //create array of doctor data and then pass it to the doctor card component and then display it in the doctor profile page as well
 
+  //usestate for storing data in empty arry 
   const [doctors, setDoctors] = useState([]);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [selectedSpecialty, setSelectedSpecialty] = useState("All");
+
+
+
+  const filteredDoctors = doctors.filter((doctor) => {
+
+    const matchesSearch =
+      doctor.name.toLowerCase().includes(searchTerm.toLowerCase());
+
+    const matchesSpecialty =
+      selectedSpecialty === "All" ||
+      doctor.specialty === selectedSpecialty;
+
+    return matchesSearch && matchesSpecialty;
+
+  });
+
+
+  // Dummy doctor data
+  const dummyDoctor = {
+    name: "Dr. Rajesh Kumar",
+    specialty: "General Physician",
+    location: "Patna, Bihar",
+    rating: "4.5",
+    experience: "12",
+    fee: "500",
+    qualification: "MBBS, MD",
+    profileImage: null,
+    hospitalName: "City Hospital"
+  };
+
+
+
 
   React.useEffect(() => {
     const storedDoctors = JSON.parse(localStorage.getItem("doctors")) || [];
 
-    // Map stored doctors to match your DoctorCard props
-    const formattedDoctors = storedDoctors.map((doc) => ({
-      name: doc.fullName,
-      specialty: doc.specialization,
-      location: doc.clinicLocation,
-      rating: doc.rating || "4.5",
-      experience: doc.workingExperience,
-      fee: doc.fee || "500",
-      qualification: doc.qualification,
-      profileImage: doc.profileImage || null,
-      hospitalName: doc.hospitalName || null
+    // If no doctors are registered, use dummy doctor
+    if (storedDoctors.length === 0) {
+      setDoctors([dummyDoctor]);
+    } else {
 
-    }));
-
-    setDoctors(formattedDoctors);
+      // Map stored doctors to match your DoctorCard props
+      const formattedDoctors = storedDoctors.map((doc) => ({
+        id: doc.id,   // 🔥 YE SABSE IMPORTANT LINE
+        name: doc.fullName || "Dr. Rajesh Kumar",
+        specialty: doc.specialization || "General Physician",
+        location: doc.clinicLocation || "Patna",
+        rating: doc.rating || "4.5",
+        experience: doc.workingExperience || "12",
+        fee: doc.fee || "500",
+        qualification: doc.qualification || "MBBS, MD",
+        profileImage: doc.profileImage || null,
+        hospitalName: doc.hospitalName || "City Hospital"
+      }));
+      setDoctors(formattedDoctors);
+    }
   }, []);
-  // For demonstration, we can create an array of doctors with the same data
+
+
+  const navigate = useNavigate();
+
+
 
   return (
     <>
       {/* // back button */}
-      <div className='p-6  cursor-pointer border-b border-gray-300 fixed w-full bg-white z-10'>
-        <IoIosArrowRoundBack className='text-3xl text-gray-700 cursor-pointer' />
+      <div className='p-6  cursor-pointer border-b border-gray-300 
+      fixed w-full bg-white z-10'
+      >
+        <div className='flex justify-between'>
+          <IoIosArrowRoundBack
+            onClick={() => navigate("/")}
+            className='text-3xl text-gray-700 cursor-pointer' />
+
+          {/* // dropdown for specialty filter */}
+          <div className="relative">
+            <select
+              className="appearance-none bg-white border-2  text-gray-600 px-4 py-2.5 pr-10 rounded-lg font-medium cursor-pointer hover:border-[#1a79f7] focus:outline-none focus:ring-2 focus:ring-[#1a79f7] focus:border-transparent transition-all shadow-sm"
+              value={selectedSpecialty}
+              onChange={(e) => setSelectedSpecialty(e.target.value)}
+            >
+              <option value="All"> All Specialties</option>
+              <option value="General Physician">🩺 General Physician</option>
+              <option value="Cardiologist">❤️ Cardiologist</option>
+              <option value="Dentist">🦷 Dentist</option>
+              <option value="Dermatologist">🧴 Dermatologist</option>
+              <option value="Pediatrician">👶 Pediatrician</option>
+              <option value="Neurologist">🧠 Neurologist</option>
+              <option value="Orthopedic">🦴 Orthopedic</option>
+            </select>
+            <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-3 text-gray-700">
+              <svg className="fill-current h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20">
+                <path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z" />
+              </svg>
+            </div>
+          </div>
+        </div>
+
       </div>
       <div className='p-6 cursor-pointer '>
-        <div className=' mt-15 w-[98%] h-5 border border-gray-300 flex items-center rounded-2xl mx-auto px-4 py-8 bg-white shadow-[0_0_30px_rgba(0,0,0,0.15)]'>
+        <div className=' mt-20 w-[98%] h-5 border border-gray-300 flex items-center rounded-2xl mx-auto px-4 py-8 bg-white shadow-[0_0_30px_rgba(0,0,0,0.15)]'>
           <input className=" w-full h-full text-black px-4 py-2 focus:outline-none"
-            type="text" placeholder="Search for doctors..." />
+            type="text"
+            placeholder="Search for doctors..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+          />
           <button className='bg-[#1a79f7] text-white px-5 py-3 rounded-lg cursor-pointer hover:bg-[#1563d1] transition-colors'>Search</button>
         </div>
       </div>
 
+
+
+
       <div className=" p-3 mb-20 gap-5 flex flex-col w-[98%] mx-auto">
-        {doctors.map((doctor, index) => (
+        {
+          filteredDoctors.length === 0 && (
+            <p className="text-center text-gray-500">
+              No doctors found 😔
+            </p>
+          )
+        }
+
+
+
+
+        {filteredDoctors.map((doctor) => (
           <DoctorCard
-            key={index}
+            key={doctor.id}
+            id={doctor.id}   // 🔥 ID PASS KARO
             name={doctor.name}
             specialty={doctor.specialty}
             location={doctor.location}
@@ -57,7 +149,8 @@ function SearchDoct() {
             fee={doctor.fee}
             profileImage={doctor.profileImage}
             qualification={doctor.qualification}
-            hospitalName={`Hospital- ${doctor.hospitalName}`} />
+            hospitalName={`Hospital- ${doctor.hospitalName}`}
+          />
         ))}
       </div>
     </>

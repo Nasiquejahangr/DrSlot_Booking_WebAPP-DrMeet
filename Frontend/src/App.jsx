@@ -16,6 +16,8 @@ import PrivateRoute from "./components/PrivateRoute";
 import Dashboard from './pages/Doctor/Dashboard';
 import DoctorRegistration from './pages/auth/Doctor/DoctorRegistration';
 import Doctorprofile from './pages/Doctor/Doctorprofile';
+import Vieslot from './pages/users/ViewSlot';
+import ManageSlots from './pages/Doctor/MagangeSlot';
 
 function App() {
 
@@ -118,7 +120,18 @@ function App() {
               <Doctorprofile />
             </motion.div>
           } />
+          <Route path='/doctor/:id' element={
+            <motion.div {...pageFade}>
+              <Vieslot />
+            </motion.div>
+          } />
+          <Route path='/ManageSlot' element={
+            <motion.div {...pageFade}>
+              <ManageSlots />
+            </motion.div>
+          } />
         </Routes>
+
       </AnimatePresence>
     </>
   )

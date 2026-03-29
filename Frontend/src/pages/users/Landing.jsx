@@ -1,11 +1,27 @@
 import { IoLocationOutline, IoSearch } from "react-icons/io5";
 import { RiHospitalLine } from "react-icons/ri";
-import DoctorType from '../../components/DoctorTypeIcon';
+import DoctorType from '../../components/HomePageDoctorIcon';
 import { FaCalendarCheck, FaShieldAlt, FaClock } from "react-icons/fa";
+// import { useEffect } from "react";
 
 
 
 function Landing() {
+
+    // Load Jotform chatbot script
+    // useEffect(() => {
+    //     const script = document.createElement('script');
+    //     script.src = 'https://cdn.jotfor.ms/agent/embedjs/019cafcb05837fa9bf5d1eaed7f1073ee9c2/embed.js';
+    //     script.async = true;
+    //     document.body.appendChild(script);
+
+    //     return () => {
+    //         // Cleanup script when component unmounts
+    //         document.body.removeChild(script);
+    //     };
+    // }, []);
+
+
 
     return (
         <>
