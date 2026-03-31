@@ -31,3 +31,19 @@ build/
 
 ### VS Code ###
 .vscode/
+
+
+# Mac
+.DS_Store
+
+# IntelliJ
+.idea/
+
+# VS Code
+.vscode/
+
+# Java Build
+target/
+
+# Node Modules
+node_modules/
