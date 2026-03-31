@@ -3,7 +3,12 @@ target/
 .mvn/wrapper/maven-wrapper.jar
 !**/src/main/**/target/
 !**/src/test/**/target/
-!**healthcare_backend/src/main/resources/application.properties
+
+
+
+### Spring Boot  Sensetive File ###
+healthcare_backend/src/main/resources/application.properties
+
 
 ### STS ###
 .apt_generated

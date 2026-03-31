@@ -19,23 +19,23 @@ public class DoctorService {
     public DoctorEntity registerDoctor(DoctorEntity doctor) {
 
 
-        // ✅ 1. Check duplicate email
+        //  1. Check duplicate email
         DoctorEntity existingDoctor = doctorRepository.findByEmail(doctor.getEmail());
         if (existingDoctor != null) {
             throw new RuntimeException("Doctor already registered!");
         }
 
-        // ✅ 2. Encrypt password
+        //  2. Encrypt password
         doctor.setPassword(passwordEncoder.encode(doctor.getPassword()));
 
-        // ✅ 3. Default slots
+        //  3. Default slots
 
 
         if (doctor.getSlots() == null) {
             doctor.setSlots("{}");
         }
 
-        // ✅ 4. Save to DB
+        //  4. Save to DB
         return doctorRepository.save(doctor);
     }
 
