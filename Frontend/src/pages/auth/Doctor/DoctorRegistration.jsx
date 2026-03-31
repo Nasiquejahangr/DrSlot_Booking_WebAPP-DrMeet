@@ -48,7 +48,7 @@ function DoctorRegistration() {
     function handleSubmit(e) {
         e.preventDefault();
 
-
+       
         // Password validation
         if (password !== confirmPassword) {
             toast.error("Passwords do not match!");
@@ -86,7 +86,6 @@ function DoctorRegistration() {
 
         //  Create new doctor object
         const newDoctor = {
-            id: Date.now(),
             fullName,
             email,
             phone,
@@ -102,27 +101,49 @@ function DoctorRegistration() {
             profileImage: null,
             about: 'I am a dedicated healthcare professional committed to providing exceptional patient care...',
             //slot for user managed by doctor in dashboard
-            slots: {}
+            slots: "{}"
         };
 
         //  Add to array
         doctorarray.push(newDoctor);
+           console.log(newDoctor);
 
-        //  Save back to localStorage
-        localStorage.setItem("doctors", JSON.stringify(doctorarray));
+//
+newDoctor.slots = JSON.stringify(newDoctor.slots);
+newDoctor.fee = Number(newDoctor.fee);
+newDoctor.workingExperience = Number(newDoctor.workingExperience);
+
+
+//now pussing data to Springboot 
+fetch("http://localhost:8080/api/doctors/register", {
+  method: "POST",
+  headers: {
+    "Content-Type": "application/json"
+  },
+  body: JSON.stringify(newDoctor)
+})
+.then(res => res.json())
+.then(data => {
+  console.log("Doctor saved:", data);
+})
+.catch(err => console.error(err));
 
 
 
-        // Save login session
-        localStorage.setItem("token", "doctorLoggedIn");
-        localStorage.setItem("userType", "doctor");
-        localStorage.setItem("currentDoctorId", newDoctor.id);
 
-        toast.success("Doctor registration successful!");
 
-        setTimeout(() => {
-            navigate("/Dashboard");
-        }, 1500);
+        // //  Save back to localStorage
+        // localStorage.setItem("doctors", JSON.stringify(doctorarray));
+        // // Save login session
+        // localStorage.setItem("token", "doctorLoggedIn");
+        // localStorage.setItem("userType", "doctor");
+        // localStorage.setItem("currentDoctorId", newDoctor.id);
+
+        // toast.success("Doctor registration successful!");
+
+        // setTimeout(() => {
+        //     navigate("/Dashboard");
+        // }, 1500);
     }
 
     return (

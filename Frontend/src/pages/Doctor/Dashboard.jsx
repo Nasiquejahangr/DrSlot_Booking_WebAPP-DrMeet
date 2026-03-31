@@ -1,25 +1,51 @@
-import React from 'react';
-import { HiCalendar, HiTrendingUp, HiStar, HiUsers, HiCurrencyRupee, HiUser, HiArrowRight, HiClock, HiLogout, HiCurrencyDollar } from 'react-icons/hi';
+import { useEffect, useState } from 'react';
+import { HiCalendar, HiTrendingUp, HiStar, HiUsers, HiCurrencyRupee, HiUser, HiClock, HiLogout, HiCurrencyDollar, HiChevronRight } from 'react-icons/hi';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
+import axios from 'axios';
+import { getDoctorAppointments } from '../../util/Localstorage';
 
 function Dashboard() {
-
     const navigate = useNavigate();
-    //i want to remove nav if user == doctor
-    if (localStorage.getItem("userType") !== "doctor") {
-        navigate('/login');
-    }
-    //  Get doctors array
-    const doctors = JSON.parse(localStorage.getItem("doctors")) || [];
-    const currentDoctorId = localStorage.getItem("currentDoctorId");
+    const [doctor, setDoctor] = useState(null);
 
-    //  Find current doctor
-    const currentDoctor = doctors.find(
-        doc => doc.id == currentDoctorId
-    ) || {};
+    useEffect(() => {
+        if (localStorage.getItem("userType") !== "doctor") {
+            navigate('/login');
+            return;
+        }
+
+        const savedUser = JSON.parse(localStorage.getItem("user") || "{}");
+        const email = localStorage.getItem("doctorEmail") || savedUser?.email;
+
+        if (!email) return;
+
+        axios.get(`http://localhost:8080/api/doctors/get/${email}`)
+            .then((res) => {
+                setDoctor(res.data);
+                if (res.data?.id) {
+                    localStorage.setItem("currentDoctorId", res.data.id);
+                }
+            })
+            .catch((err) => {
+                console.error(err);
+                toast.error("Failed to load doctor data");
+            });
+    }, [navigate]);
+
+
+    //for stats and welcome message
+    const currentDoctorId = doctor?.id || localStorage.getItem("currentDoctorId");
+    const currentDoctor = doctor || {};
     const doctorName = currentDoctor.fullName || "Doctor";
-    const doctorEmail = currentDoctor.email || "No Email";
+    const doctorSpecialization = currentDoctor.specialization || "";
+
+    const appointments = getDoctorAppointments(Number(currentDoctorId));
+    const today = new Date(); today.setHours(0, 0, 0, 0);
+    const todayCount = appointments.filter(a => {
+        const d = new Date(a.date); d.setHours(0, 0, 0, 0);
+        return d.getTime() === today.getTime();
+    }).length;
 
     const handleLogout = () => {
         localStorage.removeItem('token');
@@ -29,265 +55,132 @@ function Dashboard() {
         navigate('/login');
     };
 
-    const quickActions = [
-        {
-            icon: HiCurrencyDollar,
-            title: 'Earnings & Analytics',
-            description: 'View revenue and reports',
-            bgColor: 'bg-blue-50',
-            iconColor: 'text-blue-600'
-        },
-        {
-            icon: HiClock,
-            title: 'Manage Slots',
-            description: 'Set your availability',
-            bgColor: 'bg-blue-50',
-            iconColor: 'text-blue-600',
-            onClick: () => navigate('/ManageSlot')
-        },
-        {
-            icon: HiCalendar,
-            title: 'Appointments',
-            description: 'View booked appointments',
-            bgColor: 'bg-blue-50',
-            iconColor: 'text-blue-600'
-        }
-    ];
-
     const stats = [
-        {
-            icon: HiCalendar,
-            label: 'Today',
-            value: '0',
-            subtitle: 'Appointments',
-            color: 'text-blue-500',
-            bgColor: 'bg-blue-50'
-        },
-        {
-            icon: HiTrendingUp,
-            label: 'Total',
-            value: '0',
-            subtitle: 'Bookings',
-            color: 'text-cyan-500',
-            bgColor: 'bg-cyan-50'
-        },
-        {
-            icon: HiStar,
-            label: 'Rating',
-            value: '0.0',
-            subtitle: '0 Reviews',
-            color: 'text-cyan-500',
-            bgColor: 'bg-cyan-50'
-        },
-        {
-            icon: HiUsers,
-            label: 'Completed',
-            value: '0',
-            subtitle: 'Patients',
-            color: 'text-blue-500',
-            bgColor: 'bg-blue-50'
-        }
+        { icon: HiCalendar, label: "Today's", value: todayCount, subtitle: 'Appointments', color: 'text-blue-600', bg: 'bg-blue-50' },
+        { icon: HiTrendingUp, label: 'Total', value: appointments.length, subtitle: 'Bookings', color: 'text-violet-600', bg: 'bg-violet-50' },
+        { icon: HiStar, label: 'Rating', value: currentDoctor.rating || '—', subtitle: 'Score', color: 'text-amber-500', bg: 'bg-amber-50' },
+        { icon: HiUsers, label: 'Patients', value: appointments.length, subtitle: 'Served', color: 'text-emerald-600', bg: 'bg-emerald-50' },
     ];
 
+    const quickActions = [
+        { icon: HiClock, title: 'Manage Slots', description: 'Add, edit or delete time slots', color: 'text-blue-600', bg: 'bg-blue-50', border: 'border-blue-100', onClick: () => navigate('/ManageSlot') },
+        { icon: HiCalendar, title: 'Appointments', description: 'View all booked appointments', color: 'text-violet-600', bg: 'bg-violet-50', border: 'border-violet-100', onClick: () => navigate('/DoctorAppointments') },
+        { icon: HiCurrencyDollar, title: 'Earnings', description: 'View revenue and analytics', color: 'text-emerald-600', bg: 'bg-emerald-50', border: 'border-emerald-100', onClick: null },
+    ];
 
-
-    // const [selectedDate, setSelectedDate] = useState("");
-    // const [selectedTime, setSelectedTime] = useState("");
-
-    // const handleAddSlot = () => {
-
-    //     if (!selectedDate || !selectedTime) {
-    //         alert("Please select date and time");
-    //         return;
-    //     }
-
-    //     // 1️⃣ Get doctors from localStorage
-    //     const doctors = JSON.parse(localStorage.getItem("doctors")) || [];
-
-    //     // 2️⃣ Get current doctor id
-    //     const currentDoctorId = Number(localStorage.getItem("currentDoctorId"));
-
-    //     // 3️⃣ Find doctor index
-    //     const doctorIndex = doctors.findIndex(
-    //         doc => doc.id === currentDoctorId
-    //     );
-
-    //     if (doctorIndex === -1) {
-    //         alert("Doctor not found");
-    //         return;
-    //     }
-
-    //     // 4️⃣ Ensure slots object exists
-    //     if (!doctors[doctorIndex].slots) {
-    //         doctors[doctorIndex].slots = {};
-    //     }
-
-    //     // 5️⃣ If date doesn't exist → create empty array
-    //     if (!doctors[doctorIndex].slots[selectedDate]) {
-    //         doctors[doctorIndex].slots[selectedDate] = [];
-    //     }
-
-    //     // 6️⃣ Prevent duplicate slot
-    //     const slotExists = doctors[doctorIndex].slots[selectedDate].some(
-    //         slot => slot.time === selectedTime
-    //     );
-
-    //     if (slotExists) {
-    //         alert("Slot already exists for this time");
-    //         return;
-    //     }
-
-    //     // 7️⃣ Push new slot
-    //     doctors[doctorIndex].slots[selectedDate].push({
-    //         time: selectedTime,
-    //         isBooked: false
-    //     });
-
-    //     // 8️⃣ Save back to localStorage
-    //     localStorage.setItem("doctors", JSON.stringify(doctors));
-
-    //     alert("Slot added successfully");
-
-    //     // Clear fields
-    //     setSelectedDate("");
-    //     setSelectedTime("");
-
-    // }
     return (
-        <div className="p-2 mt-2 cursor-pointer">
+        <div className="min-h-screen bg-gray-50 pb-24">
 
-            {/* Doctor Profile Card */}
-            <div className="bg-linear-to-r from-blue-50 to-cyan-50 rounded-2xl shadow-lg border border-blue-100 p-6 mb-6">
-                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-                    <div className="flex items-center gap-4">
-                        <div className="w-16 h-16 bg-blue-500 rounded-full flex items-center justify-center shadow-md">
-                            {currentDoctor.profileImage ? (
-                                <img
-                                    src={currentDoctor.profileImage}
-                                    alt="Doctor Profile"
-                                    className="w-full h-full object-cover rounded-full"
-                                />
-                            ) : (
-                                <HiUser className="w-10 h-10 text-white" />
-                            )}
-                        </div>
-                        <div className="min-w-0 flex-1">
-                            <h2 className="text-xl sm:text-2xl font-bold text-gray-800 mb-1 truncate">
-                                {`Dr. ${doctorName}`}
-                            </h2>
-                            <p className="text-gray-600 text-sm truncate">
-                                {doctorEmail}
-                            </p>
-                        </div>
+            {/* Header Banner */}
+            <div className="bg-linear-to-br from-[#1a79f7] to-[#0f52b6] px-5 pt-10 pb-20 relative overflow-hidden">
+                <div className="absolute top-0 right-0 w-40 h-40 bg-white opacity-5 rounded-full -translate-y-10 translate-x-10" />
+                <div className="absolute bottom-0 left-0 w-24 h-24 bg-white opacity-5 rounded-full translate-y-8 -translate-x-6" />
+                <div className="flex items-center gap-4 relative z-10">
+                    <div className="w-16 h-16 rounded-2xl overflow-hidden bg-white/20 flex items-center justify-center shadow-lg shrink-0">
+                        {currentDoctor.profileImage
+                            ? <img src={currentDoctor.profileImage} alt="profile" className="w-full h-full object-cover" />
+                            : <HiUser className="w-9 h-9 text-white" />
+                        }
                     </div>
-
-                    <button
-                        className="bg-blue-600 text-white px-6 py-2.5 rounded-xl text-sm font-medium shadow-md w-full sm:w-auto"
-                        onClick={() => navigate('/DoctorProfile')}
-                    >
-                        View Profile
-                    </button>
-                </div>
-
-                <div className="mt-4 sm:mt-6">
-                    <button
-                        onClick={() => navigate('/DoctorProfile')}
-                        className="w-full bg-white rounded-2xl shadow-sm border border-gray-200 p-4 text-left flex items-center justify-center gap-2 text-blue-600"
-                    >
-                        Edit Profile
-                    </button>
-                </div>
-            </div>
-
-            {/* Stats */}
-            <div className="flex flex-wrap justify-around w-full gap-y-6 mb-6">
-                {stats.map((stat, index) => {
-                    const Icon = stat.icon;
-                    return (
-                        <div key={index} className="bg-white w-40 h-40 rounded-2xl shadow-sm border border-gray-200 p-6">
-                            <div className="flex items-start gap-3 mb-4">
-                                <div className={`${stat.bgColor} p-2 rounded-lg`}>
-                                    <Icon className={`w-6 h-6 ${stat.color}`} />
-                                </div>
-                                <span className="text-gray-600 text-sm">{stat.label}</span>
-                            </div>
-                            <div>
-                                <h3 className="text-4xl font-bold text-gray-900 mb-1">{stat.value}</h3>
-                                <p className="text-gray-600 text-sm">{stat.subtitle}</p>
-                            </div>
-                        </div>
-                    );
-                })}
-            </div>
-
-            {/* Earnings */}
-            <div className="rounded-2xl shadow-sm border border-gray-200 p-6">
-                <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-4">
-                        <div className="w-12 h-12 bg-blue-600 rounded-full flex items-center justify-center">
-                            <HiCurrencyRupee className="w-7 h-7 text-white" />
-                        </div>
-                        <div>
-                            <p className="text-gray-600 text-sm mb-1">This Month</p>
-                            <h2 className="text-3xl font-bold text-gray-900">₹0</h2>
-                        </div>
-                    </div>
-                    <div className="bg-cyan-100 p-2 rounded-lg">
-                        <HiTrendingUp className="w-6 h-6 text-cyan-600" />
+                    <div>
+                        <p className="text-blue-100 text-sm">Welcome back,</p>
+                        <h1 className="text-white text-xl font-bold">Dr. {doctorName}</h1>
+                        {doctorSpecialization && <p className="text-blue-200 text-xs mt-0.5">{doctorSpecialization}</p>}
                     </div>
                 </div>
             </div>
 
+            <div className="px-4 -mt-12 relative z-10 space-y-5">
 
-            {/* // Quick Actions */}
-            <div className="mt-8 cursor-pointer">
-                <h2 className="text-2xl font-bold text-gray-800 mb-4 text-center">
-                    Quick Actions
-                </h2>
-
-                <div className="space-y-4">
-                    {quickActions.map((action, index) => {
-                        const Icon = action.icon;
+                {/* Stats Grid */}
+                <div className="grid grid-cols-2 gap-3">
+                    {stats.map((s, i) => {
+                        const Icon = s.icon;
                         return (
-                            <button
-                                key={index}
-                                onClick={action.onClick}
-                                className="w-full bg-white rounded-2xl shadow-sm border border-gray-200 p-6 hover:shadow-md transition-shadow text-left"
-                            >
-                                <div className="flex items-center gap-4">
-                                    <div className={`${action.bgColor} w-14 h-14 rounded-full flex items-center justify-center`}>
-                                        <Icon className={`w-7 h-7 ${action.iconColor}`} />
-                                    </div>
-                                    <div>
-                                        <h3 className="text-lg font-bold text-gray-800">
-                                            {action.title}
-                                        </h3>
-                                        <p className="text-gray-600 text-sm">
-                                            {action.description}
-                                        </p>
-                                    </div>
+                            <div key={i} className="bg-white rounded-2xl p-4 shadow-sm border border-gray-100">
+                                <div className={`${s.bg} w-10 h-10 rounded-xl flex items-center justify-center mb-3`}>
+                                    <Icon className={`w-5 h-5 ${s.color}`} />
                                 </div>
-                            </button>
+                                <p className="text-2xl font-bold text-gray-900">{s.value}</p>
+                                <p className="text-xs text-gray-500 mt-0.5">{s.label} {s.subtitle}</p>
+                            </div>
                         );
                     })}
                 </div>
-            </div>
 
-
-
-
-            {/* Logout */}
-            <button
-                onClick={handleLogout}
-                className="mb-20 w-full bg-white rounded-2xl shadow-sm border border-gray-200 p-6 mt-6"
-            >
-                <div className="flex items-center justify-center gap-2 text-red-600">
-                    <HiLogout className="w-5 h-5" />
-                    <span className="text-lg font-semibold">Logout</span>
+                {/* Earnings Card */}
+                <div className="bg-white rounded-2xl p-5 shadow-sm border border-gray-100">
+                    <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-3">
+                            <div className="w-12 h-12 bg-emerald-500 rounded-2xl flex items-center justify-center shadow-sm">
+                                <HiCurrencyRupee className="w-7 h-7 text-white" />
+                            </div>
+                            <div>
+                                <p className="text-xs text-gray-500">This Month's Earnings</p>
+                                <p className="text-2xl font-bold text-gray-900">
+                                    ₹{appointments.reduce((sum, a) => sum + Number(a.fee || 0), 0).toLocaleString()}
+                                </p>
+                            </div>
+                        </div>
+                        <div className="bg-emerald-50 p-2 rounded-xl">
+                            <HiTrendingUp className="w-5 h-5 text-emerald-600" />
+                        </div>
+                    </div>
                 </div>
-            </button>
+
+                {/* Quick Actions */}
+                <div>
+                    <h2 className="text-base font-bold text-gray-700 mb-3 px-1">Quick Actions</h2>
+                    <div className="space-y-3">
+                        {quickActions.map((action, i) => {
+                            const Icon = action.icon;
+                            return (
+                                <button
+                                    key={i}
+                                    onClick={action.onClick}
+                                    className={`w-full bg-white rounded-2xl p-4 shadow-sm border ${action.border} flex items-center gap-4 hover:shadow-md transition-all text-left`}
+                                >
+                                    <div className={`${action.bg} w-12 h-12 rounded-xl flex items-center justify-center shrink-0`}>
+                                        <Icon className={`w-6 h-6 ${action.color}`} />
+                                    </div>
+                                    <div className="flex-1">
+                                        <p className="font-semibold text-gray-800">{action.title}</p>
+                                        <p className="text-xs text-gray-500">{action.description}</p>
+                                    </div>
+                                    <HiChevronRight className="w-5 h-5 text-gray-300" />
+                                </button>
+                            );
+                        })}
+                    </div>
+                </div>
+
+                {/* Profile Actions */}
+                <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+                    <button
+                        onClick={() => navigate('/DoctorProfile')}
+                        className="w-full flex items-center justify-between px-5 py-4 hover:bg-gray-50 transition-colors border-b border-gray-100"
+                    >
+                        <div className="flex items-center gap-3">
+                            <HiUser className="w-5 h-5 text-blue-500" />
+                            <span className="font-medium text-gray-700">View / Edit Profile</span>
+                        </div>
+                        <HiChevronRight className="w-5 h-5 text-gray-300" />
+                    </button>
+                    <button
+                        onClick={handleLogout}
+                        className="w-full flex items-center justify-between px-5 py-4 hover:bg-red-50 transition-colors"
+                    >
+                        <div className="flex items-center gap-3">
+                            <HiLogout className="w-5 h-5 text-red-500" />
+                            <span className="font-medium text-red-500">Logout</span>
+                        </div>
+                        <HiChevronRight className="w-5 h-5 text-red-200" />
+                    </button>
+                </div>
+
+            </div>
         </div>
-    )
+    );
 }
 
 export default Dashboard;

@@ -1,63 +1,12 @@
 import React, { useState } from 'react'
-import { FaCalendarAlt, FaClock, FaMapMarkerAlt, FaUser, FaPhone } from 'react-icons/fa'
-import { MdCancel } from 'react-icons/md'
-import { BiRefresh } from 'react-icons/bi'
-
+import { FaCalendarAlt, FaClock, FaMapMarkerAlt } from 'react-icons/fa'
+import { getUserAppointments } from '../../util/Localstorage'
 
 function Appointment() {
   const [activeTab, setActiveTab] = useState('upcoming')
 
-  // Sample appointment data
-  const appointments = [
-    {
-      id: 1,
-      doctorName: 'Dr. Rajesh Kumar',
-      specialty: 'Cardiologist',
-      qualification: 'MBBS, MD',
-      date: '2026-02-20',
-      time: '10:30 AM',
-      location: 'MG Road, Bangalore',
-      status: 'confirmed',
-      fee: '500',
-      image: 'https://via.placeholder.com/150'
-    },
-    {
-      id: 2,
-      doctorName: 'Dr. Priya Sharma',
-      specialty: 'Dermatologist',
-      qualification: 'MBBS, DVD',
-      date: '2026-02-22',
-      time: '2:00 PM',
-      location: 'Koramangala, Bangalore',
-      status: 'pending',
-      fee: '400',
-      image: 'https://via.placeholder.com/150'
-    },
-    {
-      id: 3,
-      doctorName: 'Dr. Arjun Verma',
-      specialty: 'Pediatrician',
-      qualification: 'MBBS, MD',
-      date: '2026-01-15',
-      time: '11:00 AM',
-      location: 'Indiranagar, Bangalore',
-      status: 'completed',
-      fee: '600',
-      image: 'https://via.placeholder.com/150'
-    },
-    {
-      id: 4,
-      doctorName: 'Dr. Anjali Mehta',
-      specialty: 'Orthopedic',
-      qualification: 'MBBS, MS',
-      date: '2026-01-10',
-      time: '4:30 PM',
-      location: 'Whitefield, Bangalore',
-      status: 'cancelled',
-      fee: '550',
-      image: 'https://via.placeholder.com/150'
-    }
-  ]
+  const currentUserId = Number(localStorage.getItem("currentUserId"));
+  const appointments = getUserAppointments(currentUserId);
 
   const getStatusColor = (status) => {
     switch (status) {
@@ -75,18 +24,19 @@ function Appointment() {
   }
 
   const filterAppointments = () => {
-    const today = new Date('2026-02-16')
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
 
     if (activeTab === 'upcoming') {
       return appointments.filter(apt =>
         new Date(apt.date) >= today && apt.status !== 'cancelled' && apt.status !== 'completed'
-      )
+      );
     } else if (activeTab === 'past') {
       return appointments.filter(apt =>
         new Date(apt.date) < today || apt.status === 'completed' || apt.status === 'cancelled'
-      )
+      );
     }
-    return appointments
+    return appointments;
   }
 
   const filteredAppointments = filterAppointments()
@@ -102,8 +52,7 @@ function Appointment() {
             <p className='text-gray-600'>Manage and view your appointment history</p>
           </div>
 
-          {/* Statistics Cards */}
-          <div className="flex overflow-x-auto text-center gap-4 mb-8">
+            <div className="flex overflow-x-auto text-center gap-4 mb-8">
             <div className="bg-white border border-gray-200 rounded-2xl p-6 shadow-sm hover:shadow-md transition-all transform hover:-translate-y-1">
               <div className="flex justify-between items-center gap-5">
                 <div>
@@ -203,29 +152,26 @@ function Appointment() {
                 <div key={appointment.id} className="bg-white border border-gray-200 rounded-2xl p-6 shadow-sm hover:shadow-lg transition-all">
                   <div className="flex flex-col md:flex-row items-start gap-5">
                     {/* Doctor Image */}
-                    <div className="rounded-2xl w-20 h-20 flex items-center justify-center overflow-hidden bg-linear-to-br from-blue-100 to-blue-50 flex-shrink-0 border-2 border-blue-200">
+                    <div className="rounded-2xl w-20 h-20 flex items-center justify-center overflow-hidden bg-blue-50 flex-shrink-0 border-2 border-blue-200">
                       <img
-                        src={appointment.image}
+                        src={appointment.profileImage}
                         alt={appointment.doctorName}
                         className="w-full h-full object-cover"
                       />
                     </div>
-
 
                     {/* Appointment Details */}
                     <div className="flex-1 w-full">
                       <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between mb-3 gap-2">
                         <div>
                           <h3 className="text-xl font-bold text-gray-900 mb-1">{appointment.doctorName}</h3>
-                          <p className="text-base text-gray-700 font-medium">{appointment.specialty}</p>
+                          <p className="text-base text-gray-700 font-medium">{appointment.specialization}</p>
                           <p className="text-sm text-gray-500">{appointment.qualification}</p>
                         </div>
                         <span className={`px-4 py-1.5 rounded-full text-sm font-semibold whitespace-nowrap ${getStatusColor(appointment.status)}`}>
                           {appointment.status.charAt(0).toUpperCase() + appointment.status.slice(1)}
                         </span>
                       </div>
-
-
 
                       {/* Date, Time, Location */}
                       <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 my-4 bg-gray-50 p-4 rounded-xl">
@@ -253,33 +199,17 @@ function Appointment() {
                           </div>
                           <div>
                             <p className="text-xs text-gray-500">Location</p>
-                            <p className="font-semibold">{appointment.location}</p>
+                            <p className="font-semibold">{appointment.clinicLocation}</p>
                           </div>
                         </div>
                       </div>
 
-                      {/* Fee and Actions */}
-                      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between pt-4 border-t border-gray-200 gap-4">
+                      {/* Fee */}
+                      <div className="flex items-center justify-between pt-4 border-t border-gray-200">
                         <div className="bg-blue-50 px-4 py-2 rounded-xl">
                           <p className="text-xs text-gray-600 mb-0.5">Consultation Fee</p>
                           <p className="text-xl font-bold text-[#1a79f7]">₹{appointment.fee}</p>
                         </div>
-
-                        {appointment.status === 'confirmed' || appointment.status === 'pending' ? (
-                          <div className="flex gap-3 w-full sm:w-auto">
-                            <button className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-5 py-3 border-2 border-gray-300 text-gray-700 rounded-xl hover:bg-gray-50 hover:border-gray-400 transition-all text-sm font-semibold">
-                              <span className="flex items-center gap-7">Reschedule <span><BiRefresh className="text-lg" /></span></span>
-                            </button>
-                            <button className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-5 py-2.5 border-2 border-red-200 bg-red-50 text-red-600 rounded-xl hover:bg-red-100 hover:border-red-300 transition-all text-sm font-semibold">
-
-                              <span className="flex items-center gap-7">Cancel <span><MdCancel className="text-lg" /></span></span>
-                            </button>
-                          </div>
-                        ) : appointment.status === 'completed' ? (
-                          <button className="w-full sm:w-auto px-6 py-2.5 bg-[#1a79f7] text-white rounded-xl hover:bg-[#1563d1] transition-all text-sm font-semibold shadow-md">
-                            Book Again
-                          </button>
-                        ) : null}
                       </div>
                     </div>
                   </div>

@@ -17,6 +17,7 @@ import Dashboard from './pages/Doctor/Dashboard';
 import DoctorRegistration from './pages/auth/Doctor/DoctorRegistration';
 import Doctorprofile from './pages/Doctor/Doctorprofile';
 import Vieslot from './pages/users/ViewSlot';
+import DoctorAppointments from './pages/Doctor/DoctorAppointments';
 import ManageSlots from './pages/Doctor/MagangeSlot';
 
 function App() {
@@ -28,6 +29,8 @@ function App() {
   // const hideLayout = location.pathname === "/login" || location.pathname === "/register";
   const authRoutes = ["/login", "/register", "/DoctorRegister"];
   const hideLayout = authRoutes.includes(location.pathname);
+
+  const isDoctor = localStorage.getItem("userType") === "doctor";
 
   // Show Logoandprofile only on landing page
   const showLogoAndProfile = location.pathname === "/" && !hideLayout;
@@ -62,7 +65,7 @@ function App() {
 
       {/* Conditionally render Logoandprofile and Nav based on the current route */}
       {showLogoAndProfile && <Logoandprofile />}
-      {!hideLayout && <Nav />}
+      {!hideLayout && !isDoctor && <Nav />}
 
       <AnimatePresence mode="wait" initial={false}>
         <Routes location={location} key={location.pathname}>
@@ -128,6 +131,11 @@ function App() {
           <Route path='/ManageSlot' element={
             <motion.div {...pageFade}>
               <ManageSlots />
+            </motion.div>
+          } />
+          <Route path='/DoctorAppointments' element={
+            <motion.div {...pageFade}>
+              <DoctorAppointments />
             </motion.div>
           } />
         </Routes>

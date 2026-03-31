@@ -1,28 +1,68 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { HiUser, HiMail, HiPhone, HiBriefcase, HiAcademicCap, HiPencil, HiCheck, HiX, HiCamera } from 'react-icons/hi';
 import { toast } from 'react-toastify';
 import { CiLocationOn } from 'react-icons/ci';
+import { useNavigate } from 'react-router-dom';
+import axios from 'axios';
 
 function DocProfile() {
-
+    const navigate = useNavigate();
     const fileInputRef = useRef(null);
 
-    // 🔥 Get all doctors
-    const doctors = JSON.parse(localStorage.getItem("doctors")) || [];
-    const currentDoctorId = localStorage.getItem("currentDoctorId");
+    const defaultAbout =
+        'I am a dedicated healthcare professional committed to providing exceptional patient care...';
 
-    // 🔥 Find logged-in doctor
-    const currentDoctor = doctors.find(
-        doc => doc.id == currentDoctorId
-    ) || {};
-
-    //  State initialization from current doctor
-    const [profileImage, setProfileImage] = useState(currentDoctor?.profileImage || null);
+    const [doctors, setDoctors] = useState(JSON.parse(localStorage.getItem("doctors")) || []);
+    const [doctor, setDoctor] = useState(null);
+    const [profileImage, setProfileImage] = useState(null);
     const [isEditingAbout, setIsEditingAbout] = useState(false);
-    const [about, setAbout] = useState(
-        currentDoctor?.about ||
-        'I am a dedicated healthcare professional committed to providing exceptional patient care...'
-    );
+    const [about, setAbout] = useState(defaultAbout);
+
+    // Load doctor data on mount and when navigate changes
+    useEffect(() => {
+        if (localStorage.getItem("userType") !== "doctor") {
+            navigate('/login');
+            return;
+        }
+
+        const savedUser = JSON.parse(localStorage.getItem("user") || "{}");
+        const email = localStorage.getItem("doctorEmail") || savedUser?.email;
+        if (!email) return;
+
+        const fetchDoctor = async () => {
+            try {
+                const res = await axios.get(`http://localhost:8080/api/doctors/get/${email}`);
+                const fetched = res.data || {};
+                setDoctor(fetched);
+
+                if (fetched?.id) {
+                    localStorage.setItem("currentDoctorId", fetched.id);
+                }
+
+                setProfileImage(fetched?.profileImage || null);
+                setAbout(fetched?.about || defaultAbout);
+
+                // keep localStorage doctors in sync (upsert)
+                const localDoctors = JSON.parse(localStorage.getItem("doctors")) || [];
+                const exists = localDoctors.some((d) => String(d.id) === String(fetched.id));
+                const updatedDoctors = exists
+                    ? localDoctors.map((d) => (String(d.id) === String(fetched.id) ? { ...d, ...fetched } : d))
+                    : [...localDoctors, fetched];
+
+                setDoctors(updatedDoctors);
+                localStorage.setItem("doctors", JSON.stringify(updatedDoctors));
+            } catch (error) {
+                console.error(error);
+                toast.error("Failed to load doctor profile");
+            }
+        };
+
+        fetchDoctor();
+    }, [navigate]);
+
+    const currentDoctorId = doctor?.id || localStorage.getItem("currentDoctorId");
+    const fallbackDoctor = doctors.find((doc) => String(doc.id) === String(currentDoctorId)) || {};
+    const currentDoctor = doctor || fallbackDoctor;
 
     const Doctordata = {
         name: currentDoctor.fullName || 'Unknown Doctor',
@@ -37,34 +77,29 @@ function DocProfile() {
 
     const { name, email, specialization, workingExperience, phone, hospital, license, clinicLocation } = Doctordata;
 
-    //  Save About (update inside doctors array)
     const handleSaveAbout = () => {
         const updatedDoctors = doctors.map(doc => {
-            if (doc.id == currentDoctorId) {
+            if (String(doc.id) === String(currentDoctorId)) {
                 return { ...doc, about };
             }
             return doc;
         });
 
         localStorage.setItem("doctors", JSON.stringify(updatedDoctors));
+        setDoctors(updatedDoctors);
+        setDoctor((prev) => (prev ? { ...prev, about } : prev));
         setIsEditingAbout(false);
         toast.success('About section updated successfully!');
     };
 
     const handleCancelAbout = () => {
-        setAbout(currentDoctor?.about ||
-            'I am a dedicated healthcare professional committed to providing exceptional patient care...');
+        setAbout(currentDoctor?.about || defaultAbout);
         setIsEditingAbout(false);
     };
 
-
-
-
-    //  Handle profile image upload
     const handleImageChange = (e) => {
         const file = e.target.files[0];
         if (file) {
-
             const validTypes = ['image/jpeg', 'image/png', 'image/jpg'];
             if (!validTypes.includes(file.type)) {
                 toast.error('Please upload a valid image (JPG, PNG)');
@@ -83,13 +118,15 @@ function DocProfile() {
                 setProfileImage(base64String);
 
                 const updatedDoctors = doctors.map(doc => {
-                    if (doc.id == currentDoctorId) {
+                    if (String(doc.id) === String(currentDoctorId)) {
                         return { ...doc, profileImage: base64String };
                     }
                     return doc;
                 });
 
                 localStorage.setItem("doctors", JSON.stringify(updatedDoctors));
+                setDoctors(updatedDoctors);
+                setDoctor((prev) => (prev ? { ...prev, profileImage: base64String } : prev));
                 toast.success('Profile image updated successfully!');
             };
 

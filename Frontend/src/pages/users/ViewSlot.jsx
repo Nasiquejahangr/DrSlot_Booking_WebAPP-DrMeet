@@ -2,25 +2,40 @@ import { useParams } from "react-router-dom";
 import DateSelector from '../../components/DateSelector';
 import { FaMapMarkerAlt, FaStar } from 'react-icons/fa';
 import Feedback from '../../components/Feedback';
-import { CiTimer } from "react-icons/ci";
 import TimeSelector from "../../components/TimeSelector";
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { getDoctorSlots, saveDoctorSlots, saveAppointment } from "../../util/Localstorage";
 
 function ViewSlot() {
     const [selectedDate, setSelectedDate] = useState(null);
+    const [selectedSlot, setSelectedSlot] = useState(null);
+    const [bookingError, setBookingError] = useState("");
+    const [bookingSuccess, setBookingSuccess] = useState("");
+    const [refreshKey, setRefreshKey] = useState(0);
+
+    // Bump refreshKey when user navigates back to this page so TimeSelector re-reads localStorage
+    useEffect(() => {
+        const handleVisibility = () => {
+            if (document.visibilityState === "visible") {
+                setRefreshKey((prev) => prev + 1);
+            }
+        };
+        document.addEventListener("visibilitychange", handleVisibility);
+        return () => document.removeEventListener("visibilitychange", handleVisibility);
+    }, []);
 
     // Get doctor ID from URL
     const { id } = useParams();
 
-    // 2️ Get all doctors from localStorage
+    // Get all doctors from localStorage
     const doctorsarr = JSON.parse(localStorage.getItem("doctors")) || [];
 
-    // 3️ Find selected doctor by ID
+    // Find selected doctor by ID
     const selectedDoctor = doctorsarr.find(
         (doc) => doc.id === Number(id)
     );
 
-    // 4️ Safety check
+    // Safety check
     if (!selectedDoctor) {
         return (
             <div className="p-10 text-center text-red-500 text-xl">
@@ -31,9 +46,58 @@ function ViewSlot() {
 
     // Handle date selection
     const handleDateSelect = (dateInfo) => {
-        console.log("Date selected:", dateInfo);
         setSelectedDate(dateInfo.fullDate);
-        console.log("Selected date set to:", dateInfo.fullDate);
+        setSelectedSlot(null);
+        setBookingError("");
+        setBookingSuccess("");
+    };
+
+    const handleBookAppointment = () => {
+        setBookingError("");
+        setBookingSuccess("");
+
+        if (!selectedSlot) {
+            setBookingError("Please select a time slot before booking.");
+            return;
+        }
+
+        const currentSlots = getDoctorSlots(Number(id), selectedDate);
+        const slotIndex = currentSlots.findIndex((s) => s.time === selectedSlot);
+
+        if (slotIndex === -1) {
+            setBookingError("Selected slot not found. Please try again.");
+            return;
+        }
+
+        if (currentSlots[slotIndex].isBooked) {
+            setBookingError("This slot has already been booked. Please select another.");
+            return;
+        }
+
+        const updatedSlots = currentSlots.map((s) =>
+            s.time === selectedSlot ? { ...s, isBooked: true } : s
+        );
+
+        saveDoctorSlots(Number(id), selectedDate, updatedSlots);
+
+        // Save appointment record for the user
+        const currentUserId = Number(localStorage.getItem("currentUserId"));
+        saveAppointment({
+            userId: currentUserId,
+            doctorId: Number(id),
+            doctorName: selectedDoctor.fullName,
+            specialization: selectedDoctor.specialization,
+            qualification: selectedDoctor.qualification,
+            date: selectedDate,
+            time: selectedSlot,
+            fee: selectedDoctor.fee || 500,
+            profileImage: selectedDoctor.profileImage,
+            clinicLocation: selectedDoctor.clinicLocation,
+        });
+
+        setSelectedSlot(null);
+        setBookingSuccess("Appointment booked successfully!");
+        setRefreshKey((prev) => prev + 1);
     };
 
     return (
@@ -97,39 +161,41 @@ function ViewSlot() {
                 </div>
             </div>
             <div className="p-4">
-
-
-
-
-
-
-
-                {/* // Date Selector Component */}
+                {/* Date Selector Component */}
                 <DateSelector onDateSelect={handleDateSelect} selectedDate={selectedDate} />
             </div>
             <div className="border-t border-gray-200"></div>
 
-            {/* slot div - Only show when date is selected */}
-            {console.log("Rendering check - selectedDate:", selectedDate)}
+            {/* Slot section - Only show when date is selected */}
             {selectedDate && (
                 <>
                     <div className="p-4">
-                        <TimeSelector />
+                        <TimeSelector
+                            key={refreshKey}
+                            doctorId={Number(id)}
+                            selectedDate={selectedDate}
+                            onSlotSelect={setSelectedSlot}
+                        />
                     </div>
                 </>
             )}
 
             <Feedback />
 
-            <div className='flex justify-center '>
-                <button className="mb-20 w-90 text-center bg-[#1a79f7] hover:bg-[#1563d1]
-             text-white font-semibold py-4 px-5 rounded-lg
-              transition-all shadow-md mt-4"
-                    //show alert mess
-                    onClick={() => alert("Appointment Booked Successfully!")}
+            <div className='flex flex-col items-center'>
+                {bookingError && (
+                    <p className="mb-2 text-red-500 text-sm text-center">{bookingError}</p>
+                )}
+                {bookingSuccess && (
+                    <p className="mb-2 text-green-600 text-sm text-center">{bookingSuccess}</p>
+                )}
+                <button
+                    className="mb-20 w-90 text-center bg-[#1a79f7] hover:bg-[#1563d1]
+                     text-white font-semibold py-4 px-5 rounded-lg
+                     transition-all shadow-md mt-4"
+                    onClick={handleBookAppointment}
                 >Book Appointment</button>
             </div>
-
         </>
     );
 }

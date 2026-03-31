@@ -7,47 +7,54 @@ function Login() {
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-
   const navigate = useNavigate();
 
-  function handleSubmit(e) {
+  async function handleSubmit(e) {
     e.preventDefault();
 
-    const doctors = JSON.parse(localStorage.getItem("doctors")) || [];
-    const users = JSON.parse(localStorage.getItem("users")) || [];
+    try {
+      const res = await fetch("http://localhost:8080/api/doctors/login", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          email,
+          password
+        })
+      });
 
-    // 🔥 Check doctor first
-    const doctor = doctors.find(
-      d => d.email === email && d.password === password
-    );
+      if (!res.ok) {
+        throw new Error("Login failed");
+      }
 
-    if (doctor) {
-      localStorage.setItem("token", "doctorLoggedIn");
-      localStorage.setItem("userType", "doctor");
-      localStorage.setItem("currentDoctorId", doctor.id);
+      const data = await res.json();
+      // const role = (data?.role || data?.Role || "").toUpperCase();
+      // localStorage.setItem("user", JSON.stringify(data));
+      localStorage.setItem("token", "loggedIn");
+      const role = (data?.role || data?.Role || "").toUpperCase();
 
-      toast.success("Doctor login successful!");
-      navigate("/Dashboard");
-      return;
-    }
+      if (role === "DOCTOR") {
+        localStorage.setItem("userType", "doctor");
+        localStorage.setItem("doctorEmail", data?.email || email);
+        // if (data?.id) {
+        //   localStorage.setItem("currentDoctorId", data.id);
+        // }
+        toast.success("Doctor login successful!");
+        navigate("/Dashboard");
+        return;
+      }
 
-    // 🔥 Check user
-    const user = users.find(
-      u => u.email === email && u.password === password
-    );
-
-    if (user) {
-      localStorage.setItem("token", "userLoggedIn");
       localStorage.setItem("userType", "user");
-      localStorage.setItem("currentUserId", user.id);
-
-      toast.success("User login successful!");
+      if (data?.id) {
+        localStorage.setItem("currentUserId", data.id);
+      }
+      toast.success("Login successful!");
       navigate("/");
-      return;
+      // eslint-disable-next-line no-unused-vars
+    } catch (error) {
+      toast.error("Invalid email or password!");
     }
-
-    // ❌ If no match
-    toast.error("Invalid email or password!");
   }
 
   return (
