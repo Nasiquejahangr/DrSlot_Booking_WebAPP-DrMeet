@@ -4,55 +4,78 @@ import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
 
 function Login() {
-
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const navigate = useNavigate();
 
+  async function loginByRole(endpoint, expectedRole, emailKey, successMessage) {
+    // Make API call to login endpoint
+    const response = await fetch(endpoint, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({ email, password })
+    });
+
+    if (!response.ok) {
+      return false;
+    }
+    const data = await response.json();
+    const role = (data?.role || data?.Role || "").toUpperCase();
+
+    if (role !== expectedRole) {
+      return false;
+    }
+
+    const resolvedUserType = expectedRole === "DOCTOR" ? "doctor" : "user";
+
+    sessionStorage.setItem("token", "loggedIn");
+    sessionStorage.setItem("userType", resolvedUserType);
+    sessionStorage.setItem(emailKey, data?.email || email);
+
+    // Keep backward compatibility for older flows
+    localStorage.setItem("userType", resolvedUserType);
+
+    // Store user ID for session management
+    if (data?.id) {
+      sessionStorage.setItem("currentUserId", data.id);
+      localStorage.setItem("currentUserId", data.id);
+    }
+
+    toast.success(successMessage);
+    navigate(expectedRole === "DOCTOR" ? "/Dashboard" : "/");
+    return true;
+  }
+
+  // Handle form submission for login
   async function handleSubmit(e) {
     e.preventDefault();
-
     try {
-      const res = await fetch("http://localhost:8080/api/doctors/login", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify({
-          email,
-          password
-        })
-      });
+      const isDoctorLoggedIn = await loginByRole(
+        "http://localhost:8080/api/doctors/login",
+        "DOCTOR",
+        "doctorEmail",
+        "Doctor login successful!"
+      );
 
-      if (!res.ok) {
-        throw new Error("Login failed");
-      }
-
-      const data = await res.json();
-      // const role = (data?.role || data?.Role || "").toUpperCase();
-      // localStorage.setItem("user", JSON.stringify(data));
-      localStorage.setItem("token", "loggedIn");
-      const role = (data?.role || data?.Role || "").toUpperCase();
-
-      if (role === "DOCTOR") {
-        localStorage.setItem("userType", "doctor");
-        localStorage.setItem("doctorEmail", data?.email || email);
-        // if (data?.id) {
-        //   localStorage.setItem("currentDoctorId", data.id);
-        // }
-        toast.success("Doctor login successful!");
-        navigate("/Dashboard");
+      if (isDoctorLoggedIn) {
         return;
       }
 
-      localStorage.setItem("userType", "user");
-      if (data?.id) {
-        localStorage.setItem("currentUserId", data.id);
+      const isPatientLoggedIn = await loginByRole(
+        "http://localhost:8080/api/patients/login",
+        "PATIENT",
+        "patientEmail",
+        "Patient login successful!"
+      );
+
+      if (isPatientLoggedIn) {
+        return;
       }
-      toast.success("Login successful!");
-      navigate("/");
-      // eslint-disable-next-line no-unused-vars
-    } catch (error) {
+
+      toast.error("Invalid email or password!");
+    } catch {
       toast.error("Invalid email or password!");
     }
   }

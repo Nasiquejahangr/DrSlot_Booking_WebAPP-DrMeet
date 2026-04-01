@@ -10,13 +10,14 @@ function Dashboard() {
     const [doctor, setDoctor] = useState(null);
 
     useEffect(() => {
-        if (localStorage.getItem("userType") !== "doctor") {
+        const userType = (sessionStorage.getItem("userType") || localStorage.getItem("userType") || "").toLowerCase();
+        if (userType !== "doctor") {
             navigate('/login');
             return;
         }
 
         const savedUser = JSON.parse(localStorage.getItem("user") || "{}");
-        const email = localStorage.getItem("doctorEmail") || savedUser?.email;
+        const email = sessionStorage.getItem("doctorEmail") || localStorage.getItem("doctorEmail") || savedUser?.email;
 
         if (!email) return;
 
@@ -24,6 +25,7 @@ function Dashboard() {
             .then((res) => {
                 setDoctor(res.data);
                 if (res.data?.id) {
+                    sessionStorage.setItem("currentDoctorId", res.data.id);
                     localStorage.setItem("currentDoctorId", res.data.id);
                 }
             })
@@ -35,7 +37,7 @@ function Dashboard() {
 
 
     //for stats and welcome message
-    const currentDoctorId = doctor?.id || localStorage.getItem("currentDoctorId");
+    const currentDoctorId = doctor?.id || sessionStorage.getItem("currentDoctorId") || localStorage.getItem("currentDoctorId");
     const currentDoctor = doctor || {};
     const doctorName = currentDoctor.fullName || "Doctor";
     const doctorSpecialization = currentDoctor.specialization || "";
@@ -48,8 +50,14 @@ function Dashboard() {
     }).length;
 
     const handleLogout = () => {
+        sessionStorage.removeItem('token');
+        sessionStorage.removeItem('userType');
+        sessionStorage.removeItem('doctorEmail');
+        sessionStorage.removeItem('currentDoctorId');
+
         localStorage.removeItem('token');
         localStorage.removeItem('userType');
+        localStorage.removeItem('doctorEmail');
         localStorage.removeItem('currentDoctorId');
         toast.success('Logged out successfully!');
         navigate('/login');

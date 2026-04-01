@@ -1,76 +1,54 @@
 import React from 'react'
 import { IoIosArrowRoundBack } from "react-icons/io";
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import DoctorCard from '../../components/Doctorcard';
 import { useNavigate } from 'react-router-dom';
+import { toast } from 'react-toastify';
 
 function SearchDoct() {
 
-
-  //usestate for storing data in empty arry 
   const [doctors, setDoctors] = useState([]);
+  const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedSpecialty, setSelectedSpecialty] = useState("All");
-
-
-
-  const filteredDoctors = doctors.filter((doctor) => {
-
-    const matchesSearch =
-      doctor.name.toLowerCase().includes(searchTerm.toLowerCase());
-
-    const matchesSpecialty =
-      selectedSpecialty === "All" ||
-      doctor.specialty === selectedSpecialty;
-
-    return matchesSearch && matchesSpecialty;
-
-  });
-
-
-  // Dummy doctor data
-  const dummyDoctor = {
-    name: "Dr. Rajesh Kumar",
-    specialty: "General Physician",
-    location: "Patna, Bihar",
-    rating: "4.5",
-    experience: "12",
-    fee: "500",
-    qualification: "MBBS, MD",
-    profileImage: null,
-    hospitalName: "City Hospital"
-  };
-
-
-
-
-  React.useEffect(() => {
-    const storedDoctors = JSON.parse(localStorage.getItem("doctors")) || [];
-
-    // If no doctors are registered, use dummy doctor
-    if (storedDoctors.length === 0) {
-      setDoctors([dummyDoctor]);
-    } else {
-
-      // Map stored doctors to match your DoctorCard props
-      const formattedDoctors = storedDoctors.map((doc) => ({
-        id: doc.id,   // 🔥 YE SABSE IMPORTANT LINE
-        name: doc.fullName || "Dr. Rajesh Kumar",
-        specialty: doc.specialization || "General Physician",
-        location: doc.clinicLocation || "Patna",
-        rating: doc.rating || "4.5",
-        experience: doc.workingExperience || "12",
-        fee: doc.fee || "500",
-        qualification: doc.qualification || "MBBS, MD",
-        profileImage: doc.profileImage || null,
-        hospitalName: doc.hospitalName || "City Hospital"
-      }));
-      setDoctors(formattedDoctors);
-    }
-  }, []);
-
-
   const navigate = useNavigate();
+
+  // Fetch all doctors from backend
+  useEffect(() => {
+    const fetchDoctors = async () => {
+      try {
+        const response = await fetch("http://localhost:8080/api/doctors/all");
+        if (!response.ok) {
+          throw new Error("Failed to fetch doctors");
+        }
+        const data = await response.json();
+
+        // Format backend data to match DoctorCard props
+        const formattedDoctors = data.map((doc) => ({
+          id: doc.id,
+          name: doc.fullName || "Dr. Unknown",
+          specialty: doc.specialization || "General Physician",
+          location: doc.clinicLocation || "Location Not Available",
+          rating: doc.rating || "4.5",
+          experience: doc.workingExperience || "0",
+          fee: doc.fee || "500",
+          qualification: doc.qualification || "MBBS",
+          profileImage: doc.profileImage || null,
+          hospitalName: doc.hospitalName || "Hospital Not Listed"
+        }));
+
+        setDoctors(formattedDoctors);
+      } catch (error) {
+        console.error(error);
+        toast.error("Failed to load doctors");
+        setDoctors([]);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchDoctors();
+  }, []);
 
 
 
@@ -122,36 +100,36 @@ function SearchDoct() {
         </div>
       </div>
 
-
-
-
       <div className=" p-3 mb-20 gap-5 flex flex-col w-[98%] mx-auto">
-        {
-          filteredDoctors.length === 0 && (
-            <p className="text-center text-gray-500">
-              No doctors found 😔
-            </p>
-          )
-        }
+        {loading && (
+          <p className="text-center text-gray-500">Loading doctors...</p>
+        )}
 
+        {!loading && doctors.length === 0 && (
+          <p className="text-center text-gray-500">No doctors found 😔</p>
+        )}
 
-
-
-        {filteredDoctors.map((doctor) => (
-          <DoctorCard
-            key={doctor.id}
-            id={doctor.id}   // 🔥 ID PASS KARO
-            name={doctor.name}
-            specialty={doctor.specialty}
-            location={doctor.location}
-            rating={doctor.rating}
-            experience={doctor.experience}
-            fee={doctor.fee}
-            profileImage={doctor.profileImage}
-            qualification={doctor.qualification}
-            hospitalName={`Hospital- ${doctor.hospitalName}`}
-          />
-        ))}
+        {!loading && doctors.length > 0 && doctors
+          .filter((doctor) => {
+            const matchesSearch = doctor.name.toLowerCase().includes(searchTerm.toLowerCase());
+            const matchesSpecialty = selectedSpecialty === "All" || doctor.specialty === selectedSpecialty;
+            return matchesSearch && matchesSpecialty;
+          })
+          .map((doctor) => (
+            <DoctorCard
+              key={doctor.id}
+              id={doctor.id}
+              name={doctor.name}
+              specialty={doctor.specialty}
+              location={doctor.location}
+              rating={doctor.rating}
+              experience={doctor.experience}
+              fee={doctor.fee}
+              profileImage={doctor.profileImage}
+              qualification={doctor.qualification}
+              hospitalName={`Hospital- ${doctor.hospitalName}`}
+            />
+          ))}
       </div>
     </>
   )

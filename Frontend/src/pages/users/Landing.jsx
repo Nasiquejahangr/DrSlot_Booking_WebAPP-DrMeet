@@ -4,12 +4,35 @@ import DoctorType from '../../components/HomePageDoctorIcon';
 import { FaCalendarCheck, FaShieldAlt, FaClock, FaUserMd, FaStar, FaCheckCircle } from "react-icons/fa";
 import { HiArrowRight } from "react-icons/hi";
 import { useNavigate } from "react-router-dom";
+import { useState, useEffect } from "react";
+import { toast } from "react-toastify";
 
 function Landing() {
     const navigate = useNavigate();
+    const [doctors, setDoctors] = useState([]);
+    const [loading, setLoading] = useState(true);
 
-    // Load real doctors from localStorage
-    const doctors = JSON.parse(localStorage.getItem("doctors") || "[]").slice(0, 4);
+    // Fetch doctors from backend
+    useEffect(() => {
+        const fetchDoctors = async () => {
+            try {
+                const response = await fetch("http://localhost:8080/api/doctors/all");
+                if (!response.ok) {
+                    throw new Error("Failed to fetch doctors");
+                }
+                const data = await response.json();
+                setDoctors(data.slice(0, 3)); // Show only first 4 doctors
+            } catch (error) {
+                console.error(error);
+                toast.error("Failed to load doctors");
+                setDoctors([]);
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        fetchDoctors();
+    }, []);
 
     const steps = [
         { num: "1", title: "Search", desc: "Find doctors by specialization or location", color: "bg-blue-500" },
@@ -21,7 +44,7 @@ function Landing() {
         <div className="min-h-screen bg-gray-50 pb-28">
 
             {/* Hero Section */}
-            <div className="bg-gradient-to-br from-[#1a79f7] to-[#0f52b6] px-5 pt-20 pb-16 relative overflow-hidden">
+            <div className="bg-linear-to-br from-[#1a79f7] to-[#0f52b6] px-5 pt-20 pb-16 relative overflow-hidden">
                 <div className="absolute top-0 right-0 w-52 h-52 bg-white opacity-5 rounded-full -translate-y-16 translate-x-16" />
                 <div className="absolute bottom-0 left-0 w-32 h-32 bg-white opacity-5 rounded-full translate-y-10 -translate-x-8" />
 
@@ -52,7 +75,7 @@ function Landing() {
                         <p className="text-sm font-bold text-gray-700">Find a Doctor</p>
                     </div>
                     <div className="flex items-center bg-gray-50 border border-gray-200 rounded-2xl px-4 py-3 gap-3 focus-within:border-[#1a79f7] focus-within:bg-blue-50/30 transition-all">
-                        <div className="w-8 h-8 bg-blue-100 rounded-xl flex items-center justify-center flex-shrink-0">
+                        <div className="w-8 h-8 bg-blue-100 rounded-xl flex items-center justify-center shrink-0">
                             <IoLocationOutline className="text-[#1a79f7] text-base" />
                         </div>
                         <div className="flex-1">
@@ -62,7 +85,7 @@ function Landing() {
                         </div>
                     </div>
                     <div className="flex items-center bg-gray-50 border border-gray-200 rounded-2xl px-4 py-3 gap-3 focus-within:border-[#1a79f7] focus-within:bg-blue-50/30 transition-all">
-                        <div className="w-8 h-8 bg-blue-100 rounded-xl flex items-center justify-center flex-shrink-0">
+                        <div className="w-8 h-8 bg-blue-100 rounded-xl flex items-center justify-center shrink-0">
                             <RiHospitalLine className="text-[#1a79f7] text-base" />
                         </div>
                         <div className="flex-1">
@@ -72,7 +95,7 @@ function Landing() {
                         </div>
                     </div>
                     <button onClick={() => navigate("/search")}
-                        className="bg-gradient-to-r from-[#1a79f7] to-[#0f52b6] hover:from-[#1563d1] hover:to-[#0a3d8f] text-white font-semibold py-3.5 rounded-2xl flex items-center justify-center gap-2 transition-all shadow-lg shadow-blue-200 active:scale-95">
+                        className="bg-linear-to-r from-[#1a79f7] to-[#0f52b6] hover:from-[#1563d1] hover:to-[#0a3d8f] text-white font-semibold py-3.5 rounded-2xl flex items-center justify-center gap-2 transition-all shadow-lg shadow-blue-200 active:scale-95">
                         <IoSearch className="text-lg" />
                         <span>Search Doctors</span>
                     </button>
@@ -101,14 +124,14 @@ function Landing() {
                 <div className="flex flex-col gap-3">
                     {steps.map((step, i) => (
                         <div key={i} className="bg-white rounded-2xl p-4 shadow-sm border border-gray-100 flex items-center gap-4">
-                            <div className={`${step.color} w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 shadow-sm`}>
+                            <div className={`${step.color} w-10 h-10 rounded-xl flex items-center justify-center shrink-0 shadow-sm`}>
                                 <span className="text-white font-extrabold text-base">{step.num}</span>
                             </div>
                             <div className="flex-1">
                                 <p className="font-bold text-gray-800 text-sm">{step.title}</p>
                                 <p className="text-xs text-gray-500 mt-0.5">{step.desc}</p>
                             </div>
-                            {i < steps.length - 1 && <HiArrowRight className="text-gray-300 w-4 h-4 flex-shrink-0" />}
+                            {i < steps.length - 1 && <HiArrowRight className="text-gray-300 w-4 h-4 shrink-0" />}
                         </div>
                     ))}
                 </div>
@@ -120,16 +143,22 @@ function Landing() {
                     <h2 className="text-base font-bold text-gray-800">Top Doctors</h2>
                     <button onClick={() => navigate("/search")} className="text-[#1a79f7] text-sm font-semibold">View All</button>
                 </div>
-                {doctors.length === 0 ? (
+                {loading && (
+                    <div className="bg-white rounded-2xl p-6 text-center border border-dashed border-gray-200">
+                        <p className="text-gray-500 text-sm">Loading doctors...</p>
+                    </div>
+                )}
+                {!loading && doctors.length === 0 && (
                     <div className="bg-white rounded-2xl p-6 text-center border border-dashed border-gray-200">
                         <FaUserMd className="text-gray-300 text-4xl mx-auto mb-2" />
-                        <p className="text-gray-400 text-sm">No doctors registered yet</p>
+                        <p className="text-gray-400 text-sm">No doctors available</p>
                     </div>
-                ) : (
+                )}
+                {!loading && doctors.length > 0 && (
                     <div className="flex flex-col gap-3">
                         {doctors.map((doc) => (
                             <div key={doc.id} className="bg-white rounded-2xl p-4 shadow-sm border border-gray-100 flex items-center gap-4">
-                                <div className="w-14 h-14 rounded-2xl overflow-hidden bg-blue-50 flex-shrink-0 border border-blue-100">
+                                <div className="w-14 h-14 rounded-2xl overflow-hidden bg-blue-50 shrink-0 border border-blue-100">
                                     {doc.profileImage
                                         ? <img src={doc.profileImage} alt={doc.fullName} className="w-full h-full object-cover" />
                                         : <div className="w-full h-full flex items-center justify-center"><FaUserMd className="text-blue-300 text-2xl" /></div>
@@ -147,7 +176,7 @@ function Landing() {
                                 </div>
                                 <button
                                     onClick={() => navigate(`/doctor/${doc.id}`)}
-                                    className="bg-blue-50 text-[#1a79f7] text-xs font-bold px-3 py-2 rounded-xl hover:bg-blue-100 transition-colors flex-shrink-0"
+                                    className="bg-blue-50 text-[#1a79f7] text-xs font-bold px-3 py-2 rounded-xl hover:bg-blue-100 transition-colors shrink-0"
                                 >
                                     Book
                                 </button>
@@ -184,14 +213,14 @@ function Landing() {
                         { icon: FaCalendarCheck, title: 'Easy Booking', desc: 'Book appointments in seconds', bg: 'bg-blue-50', color: 'text-[#1a79f7]' },
                         { icon: FaShieldAlt, title: 'Verified Doctors', desc: 'All doctors are certified & trusted', bg: 'bg-green-50', color: 'text-green-600' },
                         { icon: FaClock, title: 'Save Time', desc: 'No waiting in long queues', bg: 'bg-amber-50', color: 'text-amber-500' },
-                    ].map(({ icon: Icon, title, desc, bg, color }, i) => (
+                    ].map((item, i) => (
                         <div key={i} className="bg-white rounded-2xl p-4 shadow-sm border border-gray-100 flex items-center gap-4">
-                            <div className={`${bg} w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0`}>
-                                <Icon className={`w-5 h-5 ${color}`} />
+                            <div className={`${item.bg} w-12 h-12 rounded-xl flex items-center justify-center shrink-0`}>
+                                <item.icon className={`w-5 h-5 ${item.color}`} />
                             </div>
                             <div>
-                                <h3 className="font-bold text-gray-800 text-sm">{title}</h3>
-                                <p className="text-xs text-gray-500 mt-0.5">{desc}</p>
+                                <h3 className="font-bold text-gray-800 text-sm">{item.title}</h3>
+                                <p className="text-xs text-gray-500 mt-0.5">{item.desc}</p>
                             </div>
                         </div>
                     ))}
@@ -199,8 +228,8 @@ function Landing() {
             </div>
 
             {/* CTA Banner */}
-            <div className="px-4 mt-8 max-w-md mx-auto">
-                <div className="bg-gradient-to-r from-[#1a79f7] to-[#0f52b6] rounded-3xl p-6 relative overflow-hidden shadow-lg shadow-blue-200">
+            <div className="px-4 mt-10 max-w-md mx-auto mb-0">
+                <div className="bg-linear-to-r from-[#1a79f7] to-[#0f52b6] rounded-3xl p-6 relative overflow-hidden shadow-lg shadow-blue-200">
                     <div className="absolute top-0 right-0 w-24 h-24 bg-white opacity-5 rounded-full -translate-y-6 translate-x-6" />
                     <p className="text-white font-extrabold text-lg leading-snug mb-1">Ready to book your<br />appointment?</p>
                     <p className="text-blue-200 text-xs mb-4">Find the right doctor in seconds</p>

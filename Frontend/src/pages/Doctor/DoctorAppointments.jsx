@@ -3,7 +3,7 @@ import { FaCalendarAlt, FaClock, FaMapMarkerAlt, FaUser } from "react-icons/fa";
 import { getDoctorAppointments } from "../../util/Localstorage";
 
 function DoctorAppointments() {
-  const currentDoctorId = Number(localStorage.getItem("currentDoctorId"));
+  const currentDoctorId = Number(sessionStorage.getItem("currentDoctorId") || localStorage.getItem("currentDoctorId"));
   const appointments = getDoctorAppointments(currentDoctorId);
 
   const [activeTab, setActiveTab] = useState("upcoming");
@@ -48,11 +48,10 @@ function DoctorAppointments() {
           <button
             key={tab}
             onClick={() => setActiveTab(tab)}
-            className={`flex-1 py-3 px-4 font-semibold rounded-xl transition-all capitalize ${
-              activeTab === tab
-                ? "bg-[#1a79f7] text-white shadow-md"
-                : "text-gray-600 hover:bg-gray-50"
-            }`}
+            className={`flex-1 py-3 px-4 font-semibold rounded-xl transition-all capitalize ${activeTab === tab
+              ? "bg-[#1a79f7] text-white shadow-md"
+              : "text-gray-600 hover:bg-gray-50"
+              }`}
           >
             {tab}
           </button>
@@ -70,7 +69,7 @@ function DoctorAppointments() {
           {filtered.map((appt) => (
             <div key={appt.id} className="bg-white border border-gray-200 rounded-2xl p-5 shadow-sm">
               <div className="flex items-center gap-4 mb-4">
-                <div className="w-14 h-14 rounded-full overflow-hidden bg-blue-50 border-2 border-blue-200 flex-shrink-0 flex items-center justify-center">
+                <div className="w-14 h-14 rounded-full overflow-hidden bg-blue-50 border-2 border-blue-200 shrink-0 flex items-center justify-center">
                   {appt.profileImage ? (
                     <img src={appt.profileImage} alt="patient" className="w-full h-full object-cover" />
                   ) : (

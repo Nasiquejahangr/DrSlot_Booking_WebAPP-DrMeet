@@ -1,30 +1,86 @@
-import React from 'react'
+import React, { useState, useEffect } from 'react'
 import { FaEnvelope, FaPhone, FaUser, FaMapMarkerAlt, FaSignOutAlt } from 'react-icons/fa';
 import { useNavigate } from 'react-router-dom';
+import { toast } from 'react-toastify';
 
 function Profile() {
-
-  //use navigate hook for redirection after logout
   const navigate = useNavigate();
+  const [userData, setUserData] = useState(null);
+  const [loading, setLoading] = useState(true);
 
-  // Get user data from localStorage
-  const currentUserId = localStorage.getItem("currentUserId");
-  const usersArray = JSON.parse(localStorage.getItem("users")) || [];
-  const userData = usersArray.find(user => user.id === parseInt(currentUserId)) || {};
+  useEffect(() => {
+    const patientEmail = sessionStorage.getItem("patientEmail") || localStorage.getItem("patientEmail");
+
+    if (!patientEmail) {
+      toast.error("No user session found");
+      navigate('/login');
+      return;
+    }
+
+    const fetchUserData = async () => {
+      try {
+        const response = await fetch(`http://localhost:8080/api/patients/get/${patientEmail}`);
+
+        if (!response.ok) {
+          throw new Error("Failed to fetch user data");
+        }
+
+        const data = await response.json();
+        setUserData(data);
+        sessionStorage.setItem("userProfile", JSON.stringify(data));
+      } catch (error) {
+        console.error(error);
+        toast.error("Failed to load profile");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchUserData();
+  }, [navigate]);
+
+  if (loading) {
+    return (
+      <div className='mb-20 flex flex-col items-center min-h-screen pt-24 px-4'>
+        <p className='text-gray-600'>Loading profile...</p>
+      </div>
+    );
+  }
+
+  if (!userData) {
+    return (
+      <div className='mb-20 flex flex-col items-center min-h-screen pt-24 px-4'>
+        <p className='text-red-500'>Unable to load profile</p>
+      </div>
+    );
+  }
+
+  const displayName =
+    userData.fullname ||
+    userData.fullName ||
+    userData.name ||
+    "User";
 
 
 
   // Logout function
   const handleLogout = () => {
-    localStorage.clear();
+    sessionStorage.removeItem("token");
+    sessionStorage.removeItem("userType");
+    sessionStorage.removeItem("patientEmail");
+    sessionStorage.removeItem("doctorEmail");
+    sessionStorage.removeItem("currentUserId");
+    sessionStorage.removeItem("currentDoctorId");
+
+    localStorage.removeItem("token");
+    localStorage.removeItem("userType");
+    localStorage.removeItem("patientEmail");
+    localStorage.removeItem("doctorEmail");
+    localStorage.removeItem("currentUserId");
+    localStorage.removeItem("currentDoctorId");
     navigate('/login');
   };
 
-  function handleEditProfile() {
-    // Implement edit profile functionality here
-    alert("Edit profile functionality is not implemented yet.");
-
-  }
 
   return (
     <>
@@ -38,8 +94,8 @@ function Profile() {
           </div>
 
           {/* Name & Role */}
-          <h1 className='text-2xl font-bold text-gray-800 mb-1'>{userData.name}</h1>
-          <p className='text-gray-500 text-lg'>{userData.role}</p>
+          <h1 className='text-2xl font-bold text-gray-800 mb-1'>{displayName}</h1>
+          <p className='text-gray-500 text-lg'>Patient</p>
         </div>
 
         {/* Personal Information Card */}
@@ -60,25 +116,7 @@ function Profile() {
             <FaPhone className='w-5 h-5 text-gray-500 mt-1' />
             <div>
               <p className='text-gray-500 text-sm mb-1'>Phone</p>
-              <p className='text-gray-800 font-medium'>{userData.phoneNumber}</p>
-            </div>
-          </div>
-
-          {/* Age & Gender */}
-          <div className='flex items-start gap-4 mb-6'>
-            <FaUser className='w-5 h-5 text-gray-500 mt-1' />
-            <div>
-              <p className='text-gray-500 text-sm mb-1'>Age & Gender</p>
-              <p className='text-gray-800 font-medium'>{userData.age || "20"} Years • {userData.gender}</p>
-            </div>
-          </div>
-
-          {/* City */}
-          <div className='flex items-start gap-4'>
-            <FaMapMarkerAlt className='w-5 h-5 text-gray-500 mt-1' />
-            <div>
-              <p className='text-gray-500 text-sm mb-1'>City</p>
-              <p className='text-gray-800 font-medium'>{userData.city || "India"}</p>
+              <p className='text-gray-800 font-medium'>{userData.phoneNumber || "N/A"}</p>
             </div>
           </div>
         </div>
@@ -87,8 +125,7 @@ function Profile() {
         <button className='bg-white border-2 border-gray-300
          text-gray-800 font-bold py-3 rounded-xl w-[95%] max-w-md mb-4
           hover:bg-gray-50 transition-colors'
-          onClick={handleEditProfile}
-
+          onClick={() => toast.info("Edit profile functionality coming soon")}
         >
           Edit Profile
         </button>

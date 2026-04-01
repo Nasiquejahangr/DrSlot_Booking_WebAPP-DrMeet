@@ -15,7 +15,7 @@ public class SecurityDisable {
         http
                 .csrf(csrf -> csrf.disable()) // important
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/api/doctors/register").permitAll()
+                        .requestMatchers("/api/doctors/register","/api/patients/register").permitAll()
                         .anyRequest().permitAll() // abhi sab allow kar do
                 );
 

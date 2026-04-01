@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import Logo from '../../../assets/Logo.svg';
 import { toast } from 'react-toastify';
 import { useNavigate } from 'react-router-dom';
@@ -14,13 +14,12 @@ function Register() {
   const [phoneNumber, setPhoneNumber] = useState("");
   const [userType, setUserType] = useState("user");
 
-  // ✅ Redirect properly when doctor selected
+  // Redirect to doctor registration when doctor is selected
   useEffect(() => {
     if (userType === "doctor") {
       navigate("/DoctorRegister");
     }
   }, [userType, navigate]);
-
 
 
 
@@ -38,39 +37,57 @@ function Register() {
     }
 
 
-
-    // IMPORTANT: In a real application, you would never store passwords in localStorage or handle authentication like this. This is purely for demonstration purposes and should not be used in production.
     //  Multi-user support (array based)
-    const userarray = JSON.parse(localStorage.getItem("users")) || [];
-    const emailExists = userarray.find(user => user.email === email);
+    const PatientArray = JSON.parse(localStorage.getItem("users")) || [];
+
+
+    const emailExists = PatientArray.find(user => user.email === email);
+
     if (emailExists) {
       toast.error("User already registered with this email!");
       return;
     }
-    const newUser = {
-      id: Date.now(),
+    const newPatient = {
+      fullname: fullName,
       fullName,
       email,
       password,
-      phoneNumber,
-      role: "user"
+      phoneNumber
     };
-    userarray.push(newUser);
-    localStorage.setItem("users", JSON.stringify(userarray));
-
-
-
+    PatientArray.push(newPatient);
+    console.log(newPatient);
+    // localStorage.setItem("users", JSON.stringify(PatientArray));
     // Set login session
-    localStorage.setItem("token", "userLoggedIn");
-    localStorage.setItem("userType", "user");
-    localStorage.setItem("currentUserId", newUser.id);
+    // localStorage.setItem("token", "userLoggedIn");
+    // localStorage.setItem("userType", "user");
+    // localStorage.setItem("currentUserId", newUser.id);
+    // toast.success("User registration successful!");
+    // setTimeout(() => {
+    //   navigate("/login");
+    // }, 1500);
 
-    toast.success("User registration successful!");
 
-    setTimeout(() => {
-      navigate("/login");
-    }, 1500);
 
+
+
+    fetch("http://localhost:8080/api/patients/register", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify(newPatient)
+    })
+      .then(res => res.json())
+      .then(data => {
+        console.log("Patient saved:", data);
+        //  success message
+        toast.success("Registration Successful");
+
+        //  IMPORTANT: login page pe bhej
+        // window.location.href = "/login";
+        navigate("/login");
+      })
+      .catch(err => console.error(err));
 
   }
 
