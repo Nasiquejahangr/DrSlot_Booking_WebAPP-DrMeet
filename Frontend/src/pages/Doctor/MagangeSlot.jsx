@@ -10,7 +10,7 @@ function ManageSlots() {
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
 
-  const currentDoctorId = Number(localStorage.getItem("currentDoctorId"));
+  const currentDoctorId = Number(sessionStorage.getItem("currentDoctorId") || localStorage.getItem("currentDoctorId"));
 
   const loadSlots = (date) => {
     if (!date) {

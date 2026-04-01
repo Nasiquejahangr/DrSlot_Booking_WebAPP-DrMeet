@@ -5,7 +5,7 @@ import { getUserAppointments } from '../../util/Localstorage'
 function Appointment() {
   const [activeTab, setActiveTab] = useState('upcoming')
 
-  const currentUserId = Number(localStorage.getItem("currentUserId"));
+  const currentUserId = Number(sessionStorage.getItem("currentUserId") || localStorage.getItem("currentUserId"));
   const appointments = getUserAppointments(currentUserId);
 
   const getStatusColor = (status) => {
@@ -52,7 +52,7 @@ function Appointment() {
             <p className='text-gray-600'>Manage and view your appointment history</p>
           </div>
 
-            <div className="flex overflow-x-auto text-center gap-4 mb-8">
+          <div className="flex overflow-x-auto text-center gap-4 mb-8">
             <div className="bg-white border border-gray-200 rounded-2xl p-6 shadow-sm hover:shadow-md transition-all transform hover:-translate-y-1">
               <div className="flex justify-between items-center gap-5">
                 <div>
@@ -152,7 +152,7 @@ function Appointment() {
                 <div key={appointment.id} className="bg-white border border-gray-200 rounded-2xl p-6 shadow-sm hover:shadow-lg transition-all">
                   <div className="flex flex-col md:flex-row items-start gap-5">
                     {/* Doctor Image */}
-                    <div className="rounded-2xl w-20 h-20 flex items-center justify-center overflow-hidden bg-blue-50 flex-shrink-0 border-2 border-blue-200">
+                    <div className="rounded-2xl w-20 h-20 flex items-center justify-center overflow-hidden bg-blue-50 shrink-0 border-2 border-blue-200">
                       <img
                         src={appointment.profileImage}
                         alt={appointment.doctorName}

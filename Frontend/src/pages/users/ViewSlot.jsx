@@ -81,7 +81,7 @@ function ViewSlot() {
         saveDoctorSlots(Number(id), selectedDate, updatedSlots);
 
         // Save appointment record for the user
-        const currentUserId = Number(localStorage.getItem("currentUserId"));
+        const currentUserId = Number(sessionStorage.getItem("currentUserId") || localStorage.getItem("currentUserId"));
         saveAppointment({
             userId: currentUserId,
             doctorId: Number(id),

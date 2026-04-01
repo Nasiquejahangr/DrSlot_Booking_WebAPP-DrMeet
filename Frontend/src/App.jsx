@@ -30,7 +30,8 @@ function App() {
   const authRoutes = ["/login", "/register", "/DoctorRegister"];
   const hideLayout = authRoutes.includes(location.pathname);
 
-  const isDoctor = localStorage.getItem("userType") === "doctor";
+  const userType = (sessionStorage.getItem("userType") || localStorage.getItem("userType") || "").toLowerCase().trim();
+  const isDoctor = userType === "doctor";
 
   // Show Logoandprofile only on landing page
   const showLogoAndProfile = location.pathname === "/" && !hideLayout;

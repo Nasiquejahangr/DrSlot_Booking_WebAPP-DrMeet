@@ -12,7 +12,6 @@ function DocProfile() {
     const defaultAbout =
         'I am a dedicated healthcare professional committed to providing exceptional patient care...';
 
-    const [doctors, setDoctors] = useState(JSON.parse(localStorage.getItem("doctors")) || []);
     const [doctor, setDoctor] = useState(null);
     const [profileImage, setProfileImage] = useState(null);
     const [isEditingAbout, setIsEditingAbout] = useState(false);
@@ -20,13 +19,14 @@ function DocProfile() {
 
     // Load doctor data on mount and when navigate changes
     useEffect(() => {
-        if (localStorage.getItem("userType") !== "doctor") {
+        const userType = (sessionStorage.getItem("userType") || localStorage.getItem("userType") || "").toLowerCase();
+        if (userType !== "doctor") {
             navigate('/login');
             return;
         }
 
         const savedUser = JSON.parse(localStorage.getItem("user") || "{}");
-        const email = localStorage.getItem("doctorEmail") || savedUser?.email;
+        const email = sessionStorage.getItem("doctorEmail") || localStorage.getItem("doctorEmail") || savedUser?.email;
         if (!email) return;
 
         const fetchDoctor = async () => {
@@ -36,21 +36,12 @@ function DocProfile() {
                 setDoctor(fetched);
 
                 if (fetched?.id) {
+                    sessionStorage.setItem("currentDoctorId", fetched.id);
                     localStorage.setItem("currentDoctorId", fetched.id);
                 }
 
                 setProfileImage(fetched?.profileImage || null);
                 setAbout(fetched?.about || defaultAbout);
-
-                // keep localStorage doctors in sync (upsert)
-                const localDoctors = JSON.parse(localStorage.getItem("doctors")) || [];
-                const exists = localDoctors.some((d) => String(d.id) === String(fetched.id));
-                const updatedDoctors = exists
-                    ? localDoctors.map((d) => (String(d.id) === String(fetched.id) ? { ...d, ...fetched } : d))
-                    : [...localDoctors, fetched];
-
-                setDoctors(updatedDoctors);
-                localStorage.setItem("doctors", JSON.stringify(updatedDoctors));
             } catch (error) {
                 console.error(error);
                 toast.error("Failed to load doctor profile");
@@ -60,9 +51,7 @@ function DocProfile() {
         fetchDoctor();
     }, [navigate]);
 
-    const currentDoctorId = doctor?.id || localStorage.getItem("currentDoctorId");
-    const fallbackDoctor = doctors.find((doc) => String(doc.id) === String(currentDoctorId)) || {};
-    const currentDoctor = doctor || fallbackDoctor;
+    const currentDoctor = doctor || {};
 
     const Doctordata = {
         name: currentDoctor.fullName || 'Unknown Doctor',
@@ -78,15 +67,6 @@ function DocProfile() {
     const { name, email, specialization, workingExperience, phone, hospital, license, clinicLocation } = Doctordata;
 
     const handleSaveAbout = () => {
-        const updatedDoctors = doctors.map(doc => {
-            if (String(doc.id) === String(currentDoctorId)) {
-                return { ...doc, about };
-            }
-            return doc;
-        });
-
-        localStorage.setItem("doctors", JSON.stringify(updatedDoctors));
-        setDoctors(updatedDoctors);
         setDoctor((prev) => (prev ? { ...prev, about } : prev));
         setIsEditingAbout(false);
         toast.success('About section updated successfully!');
@@ -116,16 +96,6 @@ function DocProfile() {
             reader.onloadend = () => {
                 const base64String = reader.result;
                 setProfileImage(base64String);
-
-                const updatedDoctors = doctors.map(doc => {
-                    if (String(doc.id) === String(currentDoctorId)) {
-                        return { ...doc, profileImage: base64String };
-                    }
-                    return doc;
-                });
-
-                localStorage.setItem("doctors", JSON.stringify(updatedDoctors));
-                setDoctors(updatedDoctors);
                 setDoctor((prev) => (prev ? { ...prev, profileImage: base64String } : prev));
                 toast.success('Profile image updated successfully!');
             };

@@ -1,10 +1,10 @@
 import React, { useState } from 'react';
 import Logo from '../../../assets/Logo.svg';
 import { toast } from 'react-toastify';
-import { useNavigate } from 'react-router-dom';
+// import { useNavigate } from 'react-router-dom';
 
 function DoctorRegistration() {
-    const navigate = useNavigate();
+    // const navigate = useNavigate();
 
     const [fullName, setFullName] = useState("");
     const [email, setEmail] = useState("");
@@ -48,7 +48,7 @@ function DoctorRegistration() {
     function handleSubmit(e) {
         e.preventDefault();
 
-       
+
         // Password validation
         if (password !== confirmPassword) {
             toast.error("Passwords do not match!");
@@ -73,7 +73,7 @@ function DoctorRegistration() {
             toast.error("Please enter a valid fee (between 0 and 1000)!");
             return;
         }
-        // Get existing doctors array AND check for duplicates
+        // Storing doctor object inside doctor array
         const doctorarray = JSON.parse(localStorage.getItem("doctors")) || [];
 
         //  Check duplicate email
@@ -106,27 +106,32 @@ function DoctorRegistration() {
 
         //  Add to array
         doctorarray.push(newDoctor);
-           console.log(newDoctor);
+        console.log(newDoctor);
 
-//
-newDoctor.slots = JSON.stringify(newDoctor.slots);
-newDoctor.fee = Number(newDoctor.fee);
-newDoctor.workingExperience = Number(newDoctor.workingExperience);
+        //
+        newDoctor.slots = JSON.stringify(newDoctor.slots);
+        newDoctor.fee = Number(newDoctor.fee);
+        newDoctor.workingExperience = Number(newDoctor.workingExperience);
 
 
-//now pussing data to Springboot 
-fetch("http://localhost:8080/api/doctors/register", {
-  method: "POST",
-  headers: {
-    "Content-Type": "application/json"
-  },
-  body: JSON.stringify(newDoctor)
-})
-.then(res => res.json())
-.then(data => {
-  console.log("Doctor saved:", data);
-})
-.catch(err => console.error(err));
+        //now pussing data to Springboot 
+        fetch("http://localhost:8080/api/doctors/register", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify(newDoctor)
+        })
+            .then(res => res.json())
+            .then(data => {
+                console.log("Doctor saved:", data);
+                //  success message
+                toast.success("Registration Successful");
+
+                //  IMPORTANT: login page pe bhej
+                window.location.href = "/login";
+            })
+            .catch(err => console.error(err));
 
 
 

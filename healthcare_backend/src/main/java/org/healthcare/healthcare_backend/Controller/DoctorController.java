@@ -36,4 +36,10 @@ public class DoctorController {
         
         return doctorService.getDoctorByEmail(email);
     }
+
+    //for getting all doctors for search and home page
+    @GetMapping("/all")
+    public java.util.List<DoctorEntity> getAllDoctors() {
+        return doctorService.getAllDoctors();
+    }
 }

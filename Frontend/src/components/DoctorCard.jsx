@@ -52,7 +52,7 @@ function DoctorCard(props) {
                 </div>
                 <button
                     className="bg-[#1a79f7] hover:bg-[#1563d1] text-white font-semibold py-2 px-6 rounded-lg transition-colors"
-                    onClick={() => navigate(`/doctor/${props.id}`)}
+                    onClick={() => navigate(`/doctor/${props.email}`)}
                 >
                     View Slots
                 </button>

@@ -67,5 +67,10 @@ public class DoctorService {
         return doctorRepository.findByEmail(email);
     }
 
+    //getting all doctors for search and home page
+    public java.util.List<DoctorEntity> getAllDoctors() {
+        return doctorRepository.findAll();
+    }
+
 }
 

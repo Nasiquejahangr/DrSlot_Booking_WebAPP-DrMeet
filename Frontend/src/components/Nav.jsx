@@ -9,7 +9,7 @@ const Nav = () => {
 
 
     // Check user type from localStorage
-    const userType = localStorage.getItem("userType");
+    const userType = (sessionStorage.getItem("userType") || localStorage.getItem("userType") || "").toLowerCase().trim();
 
     // Don't render Nav for doctors
     if (userType === "doctor") {
