@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import Logo from '../../../assets/Logo.svg';
 import { toast } from 'react-toastify';
 import { useNavigate } from 'react-router-dom';
+import { userApi } from '../../../api/index';
 
 function Register() {
 
@@ -70,14 +71,7 @@ function Register() {
 
 
 
-    fetch("http://localhost:8080/api/patients/register", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify(newPatient)
-    })
-      .then(res => res.json())
+    userApi.userRegister(newPatient)
       .then(data => {
         console.log("Patient saved:", data);
         //  success message
@@ -87,7 +81,10 @@ function Register() {
         // window.location.href = "/login";
         navigate("/login");
       })
-      .catch(err => console.error(err));
+      .catch(err => {
+        console.error(err);
+        toast.error("Registration failed");
+      });
 
   }
 

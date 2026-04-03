@@ -1,5 +1,6 @@
 package org.healthcare.healthcare_backend.Services;
 
+import org.healthcare.healthcare_backend.Entity.DoctorEntity;
 import org.healthcare.healthcare_backend.Entity.PatientEntity;
 import org.healthcare.healthcare_backend.Repository.PatientRepo;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -52,5 +53,6 @@ public class PatientService {
     }
 
 
+   
 }
 

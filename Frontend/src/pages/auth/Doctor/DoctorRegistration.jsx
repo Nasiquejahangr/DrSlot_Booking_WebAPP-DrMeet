@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import Logo from '../../../assets/Logo.svg';
 import { toast } from 'react-toastify';
+import { doctorApi } from '../../../api/index';
 // import { useNavigate } from 'react-router-dom';
 
 function DoctorRegistration() {
@@ -115,14 +116,7 @@ function DoctorRegistration() {
 
 
         //now pussing data to Springboot 
-        fetch("http://localhost:8080/api/doctors/register", {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json"
-            },
-            body: JSON.stringify(newDoctor)
-        })
-            .then(res => res.json())
+        doctorApi.doctorRegister(newDoctor)
             .then(data => {
                 console.log("Doctor saved:", data);
                 //  success message
@@ -131,7 +125,10 @@ function DoctorRegistration() {
                 //  IMPORTANT: login page pe bhej
                 window.location.href = "/login";
             })
-            .catch(err => console.error(err));
+            .catch(err => {
+                console.error(err);
+                toast.error("Registration failed");
+            });
 
 
 

@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react'
 import { FaEnvelope, FaPhone, FaUser, FaMapMarkerAlt, FaSignOutAlt } from 'react-icons/fa';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
+import { userApi } from '../../api/index';
 
 function Profile() {
   const navigate = useNavigate();
@@ -19,14 +20,9 @@ function Profile() {
 
     const fetchUserData = async () => {
       try {
-        const response = await fetch(`http://localhost:8080/api/patients/get/${patientEmail}`);
-
-        if (!response.ok) {
-          throw new Error("Failed to fetch user data");
-        }
-
-        const data = await response.json();
+        const data = await userApi.getUserProfile(patientEmail);
         setUserData(data);
+        // console.log("Fetched user profile:", data); // Debug log to verify data structure
         sessionStorage.setItem("userProfile", JSON.stringify(data));
       } catch (error) {
         console.error(error);
@@ -59,7 +55,7 @@ function Profile() {
     userData.fullname ||
     userData.fullName ||
     userData.name ||
-    "User";
+    "Name is not comming....";
 
 
 

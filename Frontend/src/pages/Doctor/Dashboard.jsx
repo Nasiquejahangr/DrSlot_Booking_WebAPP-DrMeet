@@ -2,8 +2,8 @@ import { useEffect, useState } from 'react';
 import { HiCalendar, HiTrendingUp, HiStar, HiUsers, HiCurrencyRupee, HiUser, HiClock, HiLogout, HiCurrencyDollar, HiChevronRight } from 'react-icons/hi';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
-import axios from 'axios';
 import { getDoctorAppointments } from '../../util/Localstorage';
+import { doctorApi } from '../../api/index';
 
 function Dashboard() {
     const navigate = useNavigate();
@@ -21,12 +21,12 @@ function Dashboard() {
 
         if (!email) return;
 
-        axios.get(`http://localhost:8080/api/doctors/get/${email}`)
-            .then((res) => {
-                setDoctor(res.data);
-                if (res.data?.id) {
-                    sessionStorage.setItem("currentDoctorId", res.data.id);
-                    localStorage.setItem("currentDoctorId", res.data.id);
+        doctorApi.getDoctorProfile(email)
+            .then((data) => {
+                setDoctor(data);
+                if (data?.id) {
+                    sessionStorage.setItem("currentDoctorId", data.id);
+                    localStorage.setItem("currentDoctorId", data.id);
                 }
             })
             .catch((err) => {

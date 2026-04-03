@@ -6,6 +6,7 @@ import { HiArrowRight } from "react-icons/hi";
 import { useNavigate } from "react-router-dom";
 import { useState, useEffect } from "react";
 import { toast } from "react-toastify";
+import { doctorApi } from "../../api/index";
 
 function Landing() {
     const navigate = useNavigate();
@@ -16,11 +17,7 @@ function Landing() {
     useEffect(() => {
         const fetchDoctors = async () => {
             try {
-                const response = await fetch("http://localhost:8080/api/doctors/all");
-                if (!response.ok) {
-                    throw new Error("Failed to fetch doctors");
-                }
-                const data = await response.json();
+                const data = await doctorApi.getAllDoctors();
                 setDoctors(data.slice(0, 3)); // Show only first 4 doctors
             } catch (error) {
                 console.error(error);
