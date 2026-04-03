@@ -1,6 +1,7 @@
 package org.healthcare.healthcare_backend.Controller;
 
 
+import org.healthcare.healthcare_backend.Entity.DoctorEntity;
 import org.healthcare.healthcare_backend.Entity.PatientEntity;
 import org.healthcare.healthcare_backend.Services.PatientService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -31,4 +32,5 @@ public class PatientController {
     public PatientEntity getPatient(@PathVariable String email) {
         return patientService.getPatientByEmail(email);
     }
+
 }

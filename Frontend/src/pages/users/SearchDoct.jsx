@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import DoctorCard from '../../components/Doctorcard';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
+import { doctorApi } from '../../api/index';
 
 function SearchDoct() {
 
@@ -17,11 +18,7 @@ function SearchDoct() {
   useEffect(() => {
     const fetchDoctors = async () => {
       try {
-        const response = await fetch("http://localhost:8080/api/doctors/all");
-        if (!response.ok) {
-          throw new Error("Failed to fetch doctors");
-        }
-        const data = await response.json();
+        const data = await doctorApi.getAllDoctors();
 
         // Format backend data to match DoctorCard props
         const formattedDoctors = data.map((doc) => ({

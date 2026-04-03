@@ -2,50 +2,44 @@ import React, { useState } from 'react';
 import Logo from '../../../assets/Logo.svg';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
+import { doctorApi, userApi } from '../../../api/index';
 
 function Login() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const navigate = useNavigate();
 
-  async function loginByRole(endpoint, expectedRole, emailKey, successMessage) {
-    // Make API call to login endpoint
-    const response = await fetch(endpoint, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify({ email, password })
-    });
+  async function loginByRole(loginFunction, expectedRole, emailKey, successMessage) {
+    try {
+      const data = await loginFunction(email, password);
+      const role = (data?.role || data?.Role || "").toUpperCase();
 
-    if (!response.ok) {
+      if (role !== expectedRole) {
+        return false;
+      }
+
+      const resolvedUserType = expectedRole === "DOCTOR" ? "doctor" : "user";
+
+      sessionStorage.setItem("token", "loggedIn");
+      sessionStorage.setItem("userType", resolvedUserType);
+      sessionStorage.setItem(emailKey, data?.email || email);
+
+      // Keep backward compatibility for older flows
+      localStorage.setItem("userType", resolvedUserType);
+
+      // Store user ID for session management
+      if (data?.id) {
+        sessionStorage.setItem("currentUserId", data.id);
+        localStorage.setItem("currentUserId", data.id);
+      }
+
+      toast.success(successMessage);
+      navigate(expectedRole === "DOCTOR" ? "/Dashboard" : "/");
+      return true;
+    } catch (error) {
+      console.error(error);
       return false;
     }
-    const data = await response.json();
-    const role = (data?.role || data?.Role || "").toUpperCase();
-
-    if (role !== expectedRole) {
-      return false;
-    }
-
-    const resolvedUserType = expectedRole === "DOCTOR" ? "doctor" : "user";
-
-    sessionStorage.setItem("token", "loggedIn");
-    sessionStorage.setItem("userType", resolvedUserType);
-    sessionStorage.setItem(emailKey, data?.email || email);
-
-    // Keep backward compatibility for older flows
-    localStorage.setItem("userType", resolvedUserType);
-
-    // Store user ID for session management
-    if (data?.id) {
-      sessionStorage.setItem("currentUserId", data.id);
-      localStorage.setItem("currentUserId", data.id);
-    }
-
-    toast.success(successMessage);
-    navigate(expectedRole === "DOCTOR" ? "/Dashboard" : "/");
-    return true;
   }
 
   // Handle form submission for login
@@ -53,7 +47,7 @@ function Login() {
     e.preventDefault();
     try {
       const isDoctorLoggedIn = await loginByRole(
-        "http://localhost:8080/api/doctors/login",
+        doctorApi.doctorLogin,
         "DOCTOR",
         "doctorEmail",
         "Doctor login successful!"
@@ -64,7 +58,7 @@ function Login() {
       }
 
       const isPatientLoggedIn = await loginByRole(
-        "http://localhost:8080/api/patients/login",
+        userApi.userLogin,
         "PATIENT",
         "patientEmail",
         "Patient login successful!"
