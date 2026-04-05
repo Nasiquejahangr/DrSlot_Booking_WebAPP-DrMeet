@@ -24,7 +24,9 @@ function SearchDoct() {
         const formattedDoctors = data.map((doc) => ({
           id: doc.id,
           name: doc.fullName || "Dr. Unknown",
+          fullName: doc.fullName || "Dr. Unknown",
           specialty: doc.specialization || "General Physician",
+          specialization: doc.specialization || "General Physician",
           location: doc.clinicLocation || "Location Not Available",
           rating: doc.rating || "4.5",
           experience: doc.workingExperience || "0",
@@ -117,7 +119,9 @@ function SearchDoct() {
               key={doctor.id}
               id={doctor.id}
               name={doctor.name}
+              fullName={doctor.fullName}
               specialty={doctor.specialty}
+              specialization={doctor.specialization}
               location={doctor.location}
               rating={doctor.rating}
               experience={doctor.experience}

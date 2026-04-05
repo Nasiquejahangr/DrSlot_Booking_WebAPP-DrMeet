@@ -44,10 +44,10 @@ function Appointment() {
   return (
     <>
       {/* Main Container */}
-      <div className="min-h-screen mb-20 from-blue-50 to-white mt-20 pb-10 px-3">
+      <div className="min-h-screen mb-20 from-blue-50 to-white mt-10 pb-10 px-3">
         <div className="max-w-5xl mx-auto">
           {/* Header */}
-          <div className="mb-8 text-center">
+          <div className="mb-3 text-center">
             <h2 className='text-3xl font-bold text-gray-900 mb-1'>My Appointments</h2>
             <p className='text-gray-600'>Manage and view your appointment history</p>
           </div>
@@ -126,10 +126,6 @@ function Appointment() {
           </div>
 
 
-
-
-
-
           {/* Appointments List */}
           {filteredAppointments.length === 0 ? (
             <div className="bg-white border-2 border-dashed border-gray-300 rounded-2xl p-16 text-center">
@@ -155,7 +151,7 @@ function Appointment() {
                     <div className="rounded-2xl w-20 h-20 flex items-center justify-center overflow-hidden bg-blue-50 shrink-0 border-2 border-blue-200">
                       <img
                         src={appointment.profileImage}
-                        alt={appointment.doctorName}
+                        alt={appointment.fullName}
                         className="w-full h-full object-cover"
                       />
                     </div>
@@ -164,8 +160,8 @@ function Appointment() {
                     <div className="flex-1 w-full">
                       <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between mb-3 gap-2">
                         <div>
-                          <h3 className="text-xl font-bold text-gray-900 mb-1">{appointment.doctorName}</h3>
-                          <p className="text-base text-gray-700 font-medium">{appointment.specialization}</p>
+                          <h3 className="text-xl font-bold text-gray-900 mb-1">{appointment.doctorName || appointment.fullName || appointment.name || 'Doctor'}</h3>
+                          <p className="text-base text-gray-700 font-medium">{appointment.specialization || appointment.specialty || ''}</p>
                           <p className="text-sm text-gray-500">{appointment.qualification}</p>
                         </div>
                         <span className={`px-4 py-1.5 rounded-full text-sm font-semibold whitespace-nowrap ${getStatusColor(appointment.status)}`}>

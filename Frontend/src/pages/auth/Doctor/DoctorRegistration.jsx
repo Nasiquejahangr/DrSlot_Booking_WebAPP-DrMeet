@@ -85,6 +85,12 @@ function DoctorRegistration() {
             return;
         }
 
+        // for certificate if not upload toste message
+        if (!certificate) {
+            toast.error("Please upload your certificate!");
+            return;
+        }
+
         //  Create new doctor object
         const newDoctor = {
             fullName,
@@ -117,8 +123,8 @@ function DoctorRegistration() {
 
         //now pussing data to Springboot 
         doctorApi.doctorRegister(newDoctor)
-            .then(data => {
-                console.log("Doctor saved:", data);
+            .then(() => {
+                // console.log("Doctor saved:", data);
                 //  success message
                 toast.success("Registration Successful");
 
@@ -229,14 +235,21 @@ function DoctorRegistration() {
                     {/* Specialization */}
                     <div className="mb-3">
                         <label className="block text-gray-700 mb-2">Specialization *</label>
-                        <input
+                        <select
                             required
                             value={specialization}
                             onChange={(e) => setSpecialization(e.target.value)}
-                            type="text"
-                            className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#1a79f7]"
-                            placeholder="e.g., Cardiologist"
-                        />
+                            className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#1a79f7] bg-white"
+                        >
+                            <option value="" disabled>Select your specialization</option>
+                            <option value="General Physician">General Physician</option>
+                            <option value="Cardiologist">Cardiologist</option>
+                            <option value="Dentist">Dentist</option>
+                            <option value="Dermatologist">Dermatologist</option>
+                            <option value="Pediatrician">Pediatrician</option>
+                            <option value="Neurologist">Neurologist</option>
+                            <option value="Orthopedic">Orthopedic</option>
+                        </select>
                     </div>
 
                     {/* Qualification */}
@@ -335,6 +348,7 @@ function DoctorRegistration() {
                                 accept=".pdf,.jpg,.jpeg,.png"
                                 id="certificate-upload"
                                 className="hidden"
+                                required
                             />
                             <label
                                 htmlFor="certificate-upload"

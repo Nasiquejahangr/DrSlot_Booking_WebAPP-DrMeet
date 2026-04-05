@@ -5,7 +5,11 @@ import org.healthcare.healthcare_backend.Entity.DoctorEntity;
 import org.healthcare.healthcare_backend.Entity.LoginRequest;
 import org.healthcare.healthcare_backend.Services.DoctorService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/doctors")
@@ -24,8 +28,14 @@ public class DoctorController {
 
     //for login
     @PostMapping("/login")
-    public DoctorEntity login(@RequestBody LoginRequest request) {
-        return doctorService.loginDoctor(request.getEmail(), request.getPassword());
+    public ResponseEntity<?> login(@RequestBody LoginRequest request) {
+        try {
+            DoctorEntity doctor = doctorService.loginDoctor(request.getEmail(), request.getPassword());
+            return ResponseEntity.ok(doctor);
+        } catch (RuntimeException ex) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(Map.of("message", ex.getMessage()));
+        }
     }
 
 
@@ -41,5 +51,30 @@ public class DoctorController {
     @GetMapping("/all")
     public java.util.List<DoctorEntity> getAllDoctors() {
         return doctorService.getAllDoctors();
+    }
+
+    // update doctor profile image
+    @PutMapping("/profile-image")
+    public ResponseEntity<?> updateDoctorProfileImage(@RequestBody Map<String, String> request) {
+        try {
+            String email = request.get("email");
+            String profileImage = request.get("profileImage");
+
+            if (email == null || email.isBlank()) {
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                        .body(Map.of("message", "Email is required"));
+            }
+
+            if (profileImage == null || profileImage.isBlank()) {
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                        .body(Map.of("message", "Profile image is required"));
+            }
+
+            DoctorEntity updatedDoctor = doctorService.updateDoctorProfileImage(email, profileImage);
+            return ResponseEntity.ok(updatedDoctor);
+        } catch (RuntimeException ex) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(Map.of("message", ex.getMessage()));
+        }
     }
 }

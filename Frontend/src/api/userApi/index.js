@@ -16,7 +16,14 @@ export const userLogin = async (email, password) => {
   });
 
   if (!response.ok) {
-    throw new Error('Failed to login');
+    let errorMessage = 'Failed to login';
+    try {
+      const errorData = await response.json();
+      errorMessage = errorData?.message || errorData?.error || errorMessage;
+    } catch {
+      // ignore JSON parse error and keep fallback message
+    }
+    throw new Error(errorMessage);
   }
 
   return await response.json();

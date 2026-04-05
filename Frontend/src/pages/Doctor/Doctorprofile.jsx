@@ -3,7 +3,7 @@ import { HiUser, HiMail, HiPhone, HiBriefcase, HiAcademicCap, HiPencil, HiCheck,
 import { toast } from 'react-toastify';
 import { CiLocationOn } from 'react-icons/ci';
 import { useNavigate } from 'react-router-dom';
-import axios from 'axios';
+import { doctorApi } from '../../api/index';
 
 function DocProfile() {
     const navigate = useNavigate();
@@ -31,8 +31,7 @@ function DocProfile() {
 
         const fetchDoctor = async () => {
             try {
-                const res = await axios.get(`http://localhost:8080/api/doctors/get/${email}`);
-                const fetched = res.data || {};
+                const fetched = await doctorApi.getDoctorProfile(email);
                 setDoctor(fetched);
 
                 if (fetched?.id) {
@@ -93,11 +92,28 @@ function DocProfile() {
 
             const reader = new FileReader();
 
-            reader.onloadend = () => {
+            reader.onloadend = async () => {
                 const base64String = reader.result;
-                setProfileImage(base64String);
-                setDoctor((prev) => (prev ? { ...prev, profileImage: base64String } : prev));
-                toast.success('Profile image updated successfully!');
+                const doctorEmail = currentDoctor?.email || sessionStorage.getItem("doctorEmail") || localStorage.getItem("doctorEmail");
+
+                if (!doctorEmail) {
+                    toast.error('Doctor email not found. Please login again.');
+                    return;
+                }
+
+                try {
+                    const updatedDoctor = await doctorApi.updateDoctorProfileImage(doctorEmail, base64String);
+                    setProfileImage(updatedDoctor?.profileImage || base64String);
+                    if (updatedDoctor) {
+                        setDoctor(updatedDoctor);
+                    } else {
+                        setDoctor((prev) => (prev ? { ...prev, profileImage: base64String } : prev));
+                    }
+                    toast.success('Profile image updated in database successfully!');
+                } catch (error) {
+                    console.error(error);
+                    toast.error(error?.message || 'Failed to update profile image');
+                }
             };
 
             reader.readAsDataURL(file);

@@ -36,8 +36,7 @@ function Login() {
       toast.success(successMessage);
       navigate(expectedRole === "DOCTOR" ? "/Dashboard" : "/");
       return true;
-    } catch (error) {
-      console.error(error);
+    } catch {
       return false;
     }
   }
@@ -46,17 +45,6 @@ function Login() {
   async function handleSubmit(e) {
     e.preventDefault();
     try {
-      const isDoctorLoggedIn = await loginByRole(
-        doctorApi.doctorLogin,
-        "DOCTOR",
-        "doctorEmail",
-        "Doctor login successful!"
-      );
-
-      if (isDoctorLoggedIn) {
-        return;
-      }
-
       const isPatientLoggedIn = await loginByRole(
         userApi.userLogin,
         "PATIENT",
@@ -68,9 +56,20 @@ function Login() {
         return;
       }
 
+      const isDoctorLoggedIn = await loginByRole(
+        doctorApi.doctorLogin,
+        "DOCTOR",
+        "doctorEmail",
+        "Doctor login successful!"
+      );
+
+      if (isDoctorLoggedIn) {
+        return;
+      }
+
       toast.error("Invalid email or password!");
-    } catch {
-      toast.error("Invalid email or password!");
+    } catch (error) {
+      toast.error(error?.message || "Invalid email or password!");
     }
   }
 
