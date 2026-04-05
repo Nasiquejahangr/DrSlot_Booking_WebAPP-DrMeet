@@ -1,4 +1,30 @@
+# OS / Editor
+.DS_Store
 .vscode/
 .idea/
-.DS_Store
+
+# Environment / secrets
+.env
+.env.*
+*.env
+
+# Keys / certificates
+*.pem
+*.key
+*.p12
+*.jks
+*.keystore
+id_rsa*
+
+# Logs
+*.log
+logs/
+
+# Build outputs
+node_modules/
+dist/
+build/
+target/
+
+# Project-specific
 Frontend/docs/

@@ -1,11 +1,15 @@
 package org.healthcare.healthcare_backend.Controller;
 
 
-import org.healthcare.healthcare_backend.Entity.DoctorEntity;
+import org.healthcare.healthcare_backend.Entity.LoginRequest;
 import org.healthcare.healthcare_backend.Entity.PatientEntity;
 import org.healthcare.healthcare_backend.Services.PatientService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/patients")
@@ -23,9 +27,14 @@ public class PatientController {
     }
 
     @PostMapping("/login")
-    public PatientEntity loginPatient(@RequestBody PatientEntity request) {
-
-        return patientService.loginPatient(request.getEmail(), request.getPassword());
+    public ResponseEntity<?> loginPatient(@RequestBody LoginRequest request) {
+        try {
+            PatientEntity patient = patientService.loginPatient(request.getEmail(), request.getPassword());
+            return ResponseEntity.ok(patient);
+        } catch (RuntimeException ex) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(Map.of("message", ex.getMessage()));
+        }
     }
 
     @GetMapping("/get/{email}")

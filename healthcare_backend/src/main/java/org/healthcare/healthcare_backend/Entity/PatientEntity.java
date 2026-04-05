@@ -2,12 +2,12 @@ package org.healthcare.healthcare_backend.Entity;
 
 
 import jakarta.persistence.*;
-import lombok.Getter;
-import lombok.Setter;
-import lombok.ToString;
+import lombok.*;
 
 @Getter
 @Setter
+@NoArgsConstructor
+@AllArgsConstructor
 @Entity
 @ToString
 @Table(name = "patient")

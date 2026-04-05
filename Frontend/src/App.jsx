@@ -19,6 +19,7 @@ import Doctorprofile from './pages/Doctor/Doctorprofile';
 import Vieslot from './pages/users/ViewSlot';
 import DoctorAppointments from './pages/Doctor/DoctorAppointments';
 import ManageSlots from './pages/Doctor/MagangeSlot';
+import Payment from './Payment/Payment';
 
 function App() {
 
@@ -92,6 +93,11 @@ function App() {
           <Route path='/appointment' element={
             <motion.div {...pageFade}>
               <Appointment />
+            </motion.div>
+          } />
+          <Route path='/payment' element={
+            <motion.div {...pageFade}>
+              <Payment />
             </motion.div>
           } />
 

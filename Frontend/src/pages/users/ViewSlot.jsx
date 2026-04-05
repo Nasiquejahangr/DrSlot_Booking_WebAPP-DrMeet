@@ -1,4 +1,4 @@
-import { useParams } from "react-router-dom";
+import { useParams, useLocation } from "react-router-dom";
 import DateSelector from '../../components/DateSelector';
 import { FaMapMarkerAlt, FaStar } from 'react-icons/fa';
 import Feedback from '../../components/Feedback';
@@ -24,16 +24,20 @@ function ViewSlot() {
         return () => document.removeEventListener("visibilitychange", handleVisibility);
     }, []);
 
-    // Get doctor ID from URL
+    // Get doctor ID from URL and location state
     const { id } = useParams();
+    const location = useLocation();
+    const doctorFromState = location.state?.doctor;
 
-    // Get all doctors from localStorage
+    // Get all doctors from localStorage as fallback
     const doctorsarr = JSON.parse(localStorage.getItem("doctors")) || [];
 
-    // Find selected doctor by ID
-    const selectedDoctor = doctorsarr.find(
+    // Use doctor from state if available, otherwise find by ID in localStorage
+    const selectedDoctor = doctorFromState || doctorsarr.find(
         (doc) => doc.id === Number(id)
     );
+
+    const doctorDisplayName = selectedDoctor?.fullName || selectedDoctor?.name || "Doctor";
 
     // Safety check
     if (!selectedDoctor) {
@@ -85,9 +89,9 @@ function ViewSlot() {
         saveAppointment({
             userId: currentUserId,
             doctorId: Number(id),
-            doctorName: selectedDoctor.fullName,
-            specialization: selectedDoctor.specialization,
-            qualification: selectedDoctor.qualification,
+            doctorName: doctorDisplayName,
+            specialization: selectedDoctor.specialization || selectedDoctor.specialty || "",
+            qualification: selectedDoctor.qualification || "",
             date: selectedDate,
             time: selectedSlot,
             fee: selectedDoctor.fee || 500,
@@ -113,7 +117,7 @@ function ViewSlot() {
                             <div className="w-28 h-28 rounded-full overflow-hidden bg-gray-100 shrink-0">
                                 <img
                                     src={selectedDoctor.profileImage}
-                                    alt={selectedDoctor.fullName}
+                                    alt={doctorDisplayName}
                                     className="w-full h-full object-cover"
                                 />
                             </div>
@@ -121,13 +125,13 @@ function ViewSlot() {
                             {/* Doctor Info */}
                             <div>
                                 <h1 className="text-lg font-bold text-gray-900 mb-2">
-                                    {selectedDoctor.fullName}
+                                    {doctorDisplayName}
                                 </h1>
                                 <p className="text-sm text-gray-700 mb-1">
-                                    {selectedDoctor.specialization}
+                                    {selectedDoctor.specialization || selectedDoctor.specialty}
                                 </p>
                                 <p className="text-gray-600">
-                                    {selectedDoctor.qualification} • {selectedDoctor.workingExperience} years exp.
+                                    {selectedDoctor.qualification} • {selectedDoctor.workingExperience || selectedDoctor.experience} years exp.
                                 </p>
                             </div>
                         </div>

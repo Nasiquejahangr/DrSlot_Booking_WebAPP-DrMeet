@@ -11,30 +11,34 @@ function DoctorCard(props) {
                 {/* Avatar */}
                 <div className='rounded-full w-20 h-20 flex items-center justify-center overflow-hidden bg-gray-100'>
                     <img
-                        src={props.profileImage || 'https://via.placeholder.com/150'}
-                        alt={props.name}
+                        src={props.profileImage || '/doctor-placeholder.svg'}
+                        alt={props.fullName || props.name || 'Doctor'}
                         className="w-full h-full object-cover"
+                        onError={(e) => {
+                            e.currentTarget.onerror = null;
+                            e.currentTarget.src = '/doctor-placeholder.svg';
+                        }}
                     />
                 </div>
 
                 {/* Doctor Details */}
                 <div className="flex-1">
                     <div className="flex items-start justify-between mb-1">
-                        <h3 className="text-lg font-bold text-gray-900">{props.name || 'Dr. Rajesh Kumar'}</h3>
+                        <h3 className="text-lg font-bold text-gray-900">{props.fullName || props.name || 'Dr. Rajesh Kumar'}</h3>
                         <div className="flex items-center gap-1 bg-gray-100 px-2 py-1 rounded">
                             <FaStar className="text-[#1a79f7] w-4 h-4" />
                             <span className="font-semibold text-gray-900">{props.rating || '4.5'}</span>
                         </div>
                     </div>
 
-                    <p className="text-base text-gray-600 mb-1">{props.specialty || 'General Physician'}</p>
+                    <p className="text-base text-gray-600 mb-1">{props.specialization || props.specialty || 'General Physician'}</p>
                     <p className="text-sm text-gray-500 mb-2">
                         {props.qualification || 'MBBS, MD'} • {props.experience || '12'} years exp.
                     </p>
 
                     <div className="flex items-center gap-1 text-gray-600">
                         <FaMapMarkerAlt className="w-3 h-3" />
-                        <span className="text-sm font-semibold">{props.location || 'India'}</span>
+                        <span className="text-sm font-semibold">{props.clinicLocation || props.location || 'India'}</span>
                         <p className='text-sm  mx-7 font-sans font-medium'>{props.hospitalName}</p>
                     </div>
                 </div>
@@ -52,7 +56,7 @@ function DoctorCard(props) {
                 </div>
                 <button
                     className="bg-[#1a79f7] hover:bg-[#1563d1] text-white font-semibold py-2 px-6 rounded-lg transition-colors"
-                    onClick={() => navigate(`/doctor/${props.email}`)}
+                    onClick={() => navigate(`/doctor/${props.id}`, { state: { doctor: { ...props, fullName: props.fullName || props.name, specialization: props.specialization || props.specialty } } })}
                 >
                     View Slots
                 </button>

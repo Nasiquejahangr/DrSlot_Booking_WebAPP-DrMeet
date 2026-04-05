@@ -16,7 +16,14 @@ export const doctorLogin = async (email, password) => {
   });
 
   if (!response.ok) {
-    throw new Error('Failed to login');
+    let errorMessage = 'Failed to login';
+    try {
+      const errorData = await response.json();
+      errorMessage = errorData?.message || errorData?.error || errorMessage;
+    } catch {
+      // ignore JSON parse error and keep fallback message
+    }
+    throw new Error(errorMessage);
   }
 
   return await response.json();
@@ -67,6 +74,35 @@ export const getAllDoctors = async () => {
 
   if (!response.ok) {
     throw new Error('Failed to fetch doctors');
+  }
+
+  return await response.json();
+};
+
+/**
+ * Update Doctor Profile Image
+ * @param {string} email - Doctor email
+ * @param {string} profileImage - Base64 image string
+ * @returns {Promise<Object>} - Updated doctor profile
+ */
+export const updateDoctorProfileImage = async (email, profileImage) => {
+  const response = await fetch(`${API_BASE_URL}/doctors/profile-image`, {
+    method: 'PUT',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ email, profileImage }),
+  });
+
+  if (!response.ok) {
+    let errorMessage = 'Failed to update profile image';
+    try {
+      const errorData = await response.json();
+      errorMessage = errorData?.message || errorData?.error || errorMessage;
+    } catch {
+      // ignore JSON parse error and keep fallback message
+    }
+    throw new Error(errorMessage);
   }
 
   return await response.json();
