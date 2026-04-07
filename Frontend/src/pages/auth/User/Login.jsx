@@ -3,6 +3,7 @@ import Logo from '../../../assets/Logo.svg';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import { doctorApi, userApi } from '../../../api/index';
+import { getPatientDisplayName } from '../../../api/userApi/index';
 
 function Login() {
   const [email, setEmail] = useState("");
@@ -19,6 +20,7 @@ function Login() {
       }
 
       const resolvedUserType = expectedRole === "DOCTOR" ? "doctor" : "user";
+      const resolvedUserName = getPatientDisplayName(data) || data?.email || email;
 
       sessionStorage.setItem("token", "loggedIn");
       sessionStorage.setItem("userType", resolvedUserType);
@@ -31,6 +33,11 @@ function Login() {
       if (data?.id) {
         sessionStorage.setItem("currentUserId", data.id);
         localStorage.setItem("currentUserId", data.id);
+      }
+
+      if (resolvedUserName) {
+        sessionStorage.setItem("currentUserName", resolvedUserName);
+        localStorage.setItem("currentUserName", resolvedUserName);
       }
 
       toast.success(successMessage);
