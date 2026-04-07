@@ -70,14 +70,14 @@ function DoctorAppointments() {
             <div key={appt.id} className="bg-white border border-gray-200 rounded-2xl p-5 shadow-sm">
               <div className="flex items-center gap-4 mb-4">
                 <div className="w-14 h-14 rounded-full overflow-hidden bg-blue-50 border-2 border-blue-200 shrink-0 flex items-center justify-center">
-                  {appt.profileImage ? (
-                    <img src={appt.profileImage} alt="patient" className="w-full h-full object-cover" />
+                  {appt.patientProfileImage ? (
+                    <img src={appt.patientProfileImage} alt={appt.patientName || "patient"} className="w-full h-full object-cover" />
                   ) : (
                     <FaUser className="text-blue-400 text-2xl" />
                   )}
                 </div>
                 <div>
-                  <p className="font-bold text-gray-900">{appt.doctorName || "Patient"}</p>
+                  <p className="font-bold text-gray-900">{appt.patientName || appt.fullName || appt.name || "Patient"}</p>
                   <span className="text-xs bg-green-100 text-green-700 px-2 py-0.5 rounded-full font-semibold">
                     {appt.status}
                   </span>

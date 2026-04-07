@@ -5,6 +5,7 @@ import Feedback from '../../components/Feedback';
 import TimeSelector from "../../components/TimeSelector";
 import { useState, useEffect } from "react";
 import { getDoctorSlots, saveDoctorSlots, saveAppointment } from "../../util/Localstorage";
+import { getPatientDisplayName } from "../../api/userApi/index";
 
 function ViewSlot() {
     const [selectedDate, setSelectedDate] = useState(null);
@@ -86,10 +87,21 @@ function ViewSlot() {
 
         // Save appointment record for the user
         const currentUserId = Number(sessionStorage.getItem("currentUserId") || localStorage.getItem("currentUserId"));
+        const currentUserProfile =
+            JSON.parse(sessionStorage.getItem("userProfile") || "null") ||
+            JSON.parse(localStorage.getItem("userProfile") || "null");
+        const currentUserName =
+            sessionStorage.getItem("currentUserName") ||
+            localStorage.getItem("currentUserName") ||
+            getPatientDisplayName(currentUserProfile) ||
+            sessionStorage.getItem("patientEmail") ||
+            localStorage.getItem("patientEmail") ||
+            "Patient";
         saveAppointment({
             userId: currentUserId,
             doctorId: Number(id),
             doctorName: doctorDisplayName,
+            patientName: currentUserName,
             specialization: selectedDoctor.specialization || selectedDoctor.specialty || "",
             qualification: selectedDoctor.qualification || "",
             date: selectedDate,

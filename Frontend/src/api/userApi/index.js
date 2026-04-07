@@ -30,6 +30,19 @@ export const userLogin = async (email, password) => {
 };
 
 /**
+ * Resolve a display name from a patient profile-like object.
+ * @param {Object} profile - Profile payload or stored profile
+ * @returns {string}
+ */
+export const getPatientDisplayName = (profile) => {
+  if (!profile || typeof profile !== 'object') {
+    return '';
+  }
+
+  return profile.fullname || profile.fullName || profile.name || '';
+};
+
+/**
  * User/Patient Registration API
  * @param {Object} userData - User registration data
  * @returns {Promise<Object>} - Response data
