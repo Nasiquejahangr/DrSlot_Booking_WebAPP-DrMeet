@@ -1,7 +1,9 @@
 package org.healthcare.healthcare_backend.Controller;
 
 import org.healthcare.healthcare_backend.Entity.SlotEntity;
+import org.healthcare.healthcare_backend.Entity.PatientEntity;
 import org.healthcare.healthcare_backend.Services.SlotService;
+import org.healthcare.healthcare_backend.Repository.PatientRepo;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -11,6 +13,7 @@ import java.time.LocalDate;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/slots")
@@ -19,6 +22,9 @@ public class SlotController {
 
     @Autowired
     private SlotService slotService;
+
+    @Autowired
+    private PatientRepo patientRepository;
 
     /**
      * Get all available slots for a doctor on a specific date
@@ -152,10 +158,68 @@ public class SlotController {
     public ResponseEntity<?> getPatientAppointments(@PathVariable Long userId) {
         try {
             List<SlotEntity> appointments = slotService.getPatientAppointments(userId);
-            return ResponseEntity.ok(appointments);
+            List<Map<String, Object>> response = appointments.stream().map(slot -> {
+                Map<String, Object> item = new HashMap<>();
+                item.put("id", slot.getId());
+                item.put("userId", slot.getBookedByUserId());
+                item.put("doctorId", slot.getDoctor() != null ? slot.getDoctor().getId() : null);
+                item.put("doctorName", slot.getDoctor() != null ? slot.getDoctor().getFullName() : "Doctor");
+                item.put("specialization", slot.getDoctor() != null ? slot.getDoctor().getSpecialization() : null);
+                item.put("qualification", slot.getDoctor() != null ? slot.getDoctor().getQualification() : null);
+                item.put("profileImage", slot.getDoctor() != null ? slot.getDoctor().getProfileImage() : null);
+                item.put("clinicLocation", slot.getDoctor() != null ? slot.getDoctor().getClinicLocation() : null);
+                item.put("fee", slot.getDoctor() != null ? slot.getDoctor().getFee() : null);
+                item.put("date", slot.getSlotDate());
+                item.put("time", slot.getSlotTime());
+                item.put("status", slot.getIsBooked() ? "confirmed" : "cancelled");
+                return item;
+            }).collect(Collectors.toList());
+
+            return ResponseEntity.ok(response);
         } catch (Exception e) {
             Map<String, String> error = new HashMap<>();
             error.put("error", "Failed to fetch patient appointments: " + e.getMessage());
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
+        }
+    }
+
+    /**
+     * Get all appointments booked for a doctor
+     */
+    @GetMapping("/doctor/{doctorId}")
+    public ResponseEntity<?> getDoctorAppointments(@PathVariable Long doctorId) {
+        try {
+            List<SlotEntity> appointments = slotService.getDoctorAppointments(doctorId);
+            List<Map<String, Object>> response = appointments.stream().map(slot -> {
+                Map<String, Object> item = new HashMap<>();
+                item.put("id", slot.getId());
+                item.put("userId", slot.getBookedByUserId());
+                item.put("doctorId", doctorId);
+                
+                String patientName = "Patient";
+                String patientProfileImage = "";
+                
+                if (slot.getBookedByUserId() != null) {
+                    PatientEntity patient = patientRepository.findById(slot.getBookedByUserId()).orElse(null);
+                    if (patient != null) {
+                        patientName = patient.getFullname() != null ? patient.getFullname() : "Patient";
+                    }
+                }
+                
+                item.put("patientName", patientName);
+                item.put("patientProfileImage", patientProfileImage);
+                item.put("clinicLocation", slot.getDoctor() != null ? slot.getDoctor().getClinicLocation() : "");
+                item.put("fee", slot.getDoctor() != null ? slot.getDoctor().getFee() : null);
+                item.put("date", slot.getSlotDate());
+                item.put("time", slot.getSlotTime());
+                item.put("status", slot.getIsBooked() ? "confirmed" : "cancelled");
+                return item;
+            }).collect(Collectors.toList());
+
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            Map<String, String> error = new HashMap<>();
+            error.put("error", "Failed to fetch doctor appointments: " + e.getMessage());
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
         }
     }

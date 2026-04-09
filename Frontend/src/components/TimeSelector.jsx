@@ -1,13 +1,27 @@
 import { useState, useEffect } from 'react'
 import { CiTimer } from "react-icons/ci";
-import { getDoctorSlots } from '../util/Localstorage';
+import { DEFAULT_SLOTS, getDoctorSlots } from '../util/Localstorage';
+import { getDoctorSlotsFromDb } from '../api/userApi';
 
 function TimeSelector({ doctorId, selectedDate, onSlotSelect }) {
     const [slots, setSlots] = useState([]);
     const [selectedTime, setSelectedTime] = useState(null);
 
-    const loadSlots = () => {
+    const loadSlots = async () => {
         if (!doctorId || !selectedDate) return;
+
+        try {
+            const dbSlots = await getDoctorSlotsFromDb(doctorId, selectedDate);
+            const mergedSlots = DEFAULT_SLOTS.map((defaultSlot) => {
+                const bookedSlot = dbSlots.find((slot) => slot.time === defaultSlot.time);
+                return bookedSlot ? { ...defaultSlot, ...bookedSlot } : defaultSlot;
+            });
+            setSlots(mergedSlots);
+            return;
+        } catch {
+            // Fallback to localStorage when backend is unavailable
+        }
+
         setSlots(getDoctorSlots(doctorId, selectedDate));
     };
 

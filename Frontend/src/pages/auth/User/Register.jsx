@@ -50,7 +50,6 @@ function Register() {
     }
     const newPatient = {
       fullname: fullName,
-      fullName,
       email,
       password,
       phoneNumber
@@ -83,7 +82,7 @@ function Register() {
       })
       .catch(err => {
         console.error(err);
-        toast.error("Registration failed");
+        toast.error(err?.message || "Registration failed");
       });
 
   }

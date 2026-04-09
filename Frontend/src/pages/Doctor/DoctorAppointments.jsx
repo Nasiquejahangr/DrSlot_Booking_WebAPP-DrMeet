@@ -1,12 +1,38 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { FaCalendarAlt, FaClock, FaMapMarkerAlt, FaUser } from "react-icons/fa";
 import { getDoctorAppointments } from "../../util/Localstorage";
+import { getDoctorAppointmentsFromDb } from "../../api/doctorApi";
 
 function DoctorAppointments() {
   const currentDoctorId = Number(sessionStorage.getItem("currentDoctorId") || localStorage.getItem("currentDoctorId"));
-  const appointments = getDoctorAppointments(currentDoctorId);
-
+  const [appointments, setAppointments] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [fetchError, setFetchError] = useState("");
   const [activeTab, setActiveTab] = useState("upcoming");
+
+  useEffect(() => {
+    const loadAppointments = async () => {
+      if (!currentDoctorId) {
+        setAppointments([]);
+        setLoading(false);
+        return;
+      }
+
+      try {
+        setLoading(true);
+        setFetchError("");
+        const dbAppointments = await getDoctorAppointmentsFromDb(currentDoctorId);
+        setAppointments(dbAppointments);
+      } catch (error) {
+        setFetchError(error?.message || "Unable to fetch appointments from database.");
+        setAppointments(getDoctorAppointments(currentDoctorId));
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadAppointments();
+  }, [currentDoctorId]);
 
   const today = new Date();
   today.setHours(0, 0, 0, 0);
@@ -59,66 +85,80 @@ function DoctorAppointments() {
       </div>
 
       {/* List */}
-      {filtered.length === 0 ? (
-        <div className="bg-white border-2 border-dashed border-gray-300 rounded-2xl p-12 text-center">
-          <FaCalendarAlt className="text-gray-300 text-5xl mx-auto mb-4" />
-          <p className="text-gray-500 text-lg">No appointments in this category.</p>
+      {loading ? (
+        <div className="bg-white border border-gray-200 rounded-2xl p-10 text-center text-gray-600">
+          Loading appointments...
         </div>
       ) : (
-        <div className="space-y-4">
-          {filtered.map((appt) => (
-            <div key={appt.id} className="bg-white border border-gray-200 rounded-2xl p-5 shadow-sm">
-              <div className="flex items-center gap-4 mb-4">
-                <div className="w-14 h-14 rounded-full overflow-hidden bg-blue-50 border-2 border-blue-200 shrink-0 flex items-center justify-center">
-                  {appt.patientProfileImage ? (
-                    <img src={appt.patientProfileImage} alt={appt.patientName || "patient"} className="w-full h-full object-cover" />
-                  ) : (
-                    <FaUser className="text-blue-400 text-2xl" />
-                  )}
-                </div>
-                <div>
-                  <p className="font-bold text-gray-900">{appt.patientName || appt.fullName || appt.name || "Patient"}</p>
-                  <span className="text-xs bg-green-100 text-green-700 px-2 py-0.5 rounded-full font-semibold">
-                    {appt.status}
-                  </span>
-                </div>
-              </div>
-
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 bg-gray-50 p-3 rounded-xl">
-                <div className="flex items-center gap-2 text-sm text-gray-700">
-                  <FaCalendarAlt className="text-[#1a79f7]" />
-                  <div>
-                    <p className="text-xs text-gray-500">Date</p>
-                    <p className="font-semibold">
-                      {new Date(appt.date).toLocaleDateString("en-US", {
-                        month: "short", day: "numeric", year: "numeric",
-                      })}
-                    </p>
-                  </div>
-                </div>
-                <div className="flex items-center gap-2 text-sm text-gray-700">
-                  <FaClock className="text-[#1a79f7]" />
-                  <div>
-                    <p className="text-xs text-gray-500">Time</p>
-                    <p className="font-semibold">{appt.time}</p>
-                  </div>
-                </div>
-                <div className="flex items-center gap-2 text-sm text-gray-700">
-                  <FaMapMarkerAlt className="text-[#1a79f7]" />
-                  <div>
-                    <p className="text-xs text-gray-500">Location</p>
-                    <p className="font-semibold">{appt.clinicLocation}</p>
-                  </div>
-                </div>
-              </div>
-
-              <div className="mt-3 pt-3 border-t border-gray-100">
-                <p className="text-xs text-gray-500">Consultation Fee</p>
-                <p className="text-lg font-bold text-[#1a79f7]">₹{appt.fee}</p>
-              </div>
+        <>
+          {fetchError && (
+            <div className="bg-yellow-50 border border-yellow-200 rounded-xl p-4 mb-4 text-sm text-yellow-700">
+              {fetchError} Showing cached appointments.
             </div>
-          ))}
-        </div>
+          )}
+
+          {filtered.length === 0 ? (
+            <div className="bg-white border-2 border-dashed border-gray-300 rounded-2xl p-12 text-center">
+              <FaCalendarAlt className="text-gray-300 text-5xl mx-auto mb-4" />
+              <p className="text-gray-500 text-lg">No appointments in this category.</p>
+            </div>
+          ) : (
+            <div className="space-y-4">
+              {filtered.map((appt) => (
+                <div key={appt.id} className="bg-white border border-gray-200 rounded-2xl p-5 shadow-sm">
+                  <div className="flex items-center gap-4 mb-4">
+                    <div className="w-14 h-14 rounded-full overflow-hidden bg-blue-50 border-2 border-blue-200 shrink-0 flex items-center justify-center">
+                      {appt.patientProfileImage ? (
+                        <img src={appt.patientProfileImage} alt={appt.patientName || "patient"} className="w-full h-full object-cover" />
+                      ) : (
+                        <FaUser className="text-blue-400 text-2xl" />
+                      )}
+                    </div>
+                    <div>
+                      <p className="font-bold text-gray-900">{appt.patientName || appt.fullName || appt.name || "Patient"}</p>
+                      <span className="text-xs bg-green-100 text-green-700 px-2 py-0.5 rounded-full font-semibold">
+                        {appt.status}
+                      </span>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 bg-gray-50 p-3 rounded-xl">
+                    <div className="flex items-center gap-2 text-sm text-gray-700">
+                      <FaCalendarAlt className="text-[#1a79f7]" />
+                      <div>
+                        <p className="text-xs text-gray-500">Date</p>
+                        <p className="font-semibold">
+                          {new Date(appt.date).toLocaleDateString("en-US", {
+                            month: "short", day: "numeric", year: "numeric",
+                          })}
+                        </p>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2 text-sm text-gray-700">
+                      <FaClock className="text-[#1a79f7]" />
+                      <div>
+                        <p className="text-xs text-gray-500">Time</p>
+                        <p className="font-semibold">{appt.time}</p>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2 text-sm text-gray-700">
+                      <FaMapMarkerAlt className="text-[#1a79f7]" />
+                      <div>
+                        <p className="text-xs text-gray-500">Location</p>
+                        <p className="font-semibold">{appt.clinicLocation}</p>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="mt-3 pt-3 border-t border-gray-100">
+                    <p className="text-xs text-gray-500">Consultation Fee</p>
+                    <p className="text-lg font-bold text-[#1a79f7]">₹{appt.fee}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </>
       )}
     </div>
   );

@@ -80,6 +80,66 @@ export const getAllDoctors = async () => {
 };
 
 /**
+ * Get all doctors for admin review.
+ * @returns {Promise<Array>}
+ */
+export const getAllDoctorsForAdmin = async () => {
+  const response = await fetch(getFullUrl('/doctors/admin/all'));
+
+  if (!response.ok) {
+    throw new Error('Failed to fetch doctors for admin');
+  }
+
+  return await response.json();
+};
+
+/**
+ * Get pending doctor registrations for admin review.
+ * @returns {Promise<Array>}
+ */
+export const getPendingDoctors = async () => {
+  const response = await fetch(getFullUrl('/doctors/admin/pending'));
+
+  if (!response.ok) {
+    throw new Error('Failed to fetch pending doctors');
+  }
+
+  return await response.json();
+};
+
+/**
+ * Approve a doctor registration.
+ * @param {number} doctorId
+ */
+export const approveDoctor = async (doctorId) => {
+  const response = await fetch(getFullUrl(`/doctors/admin/${doctorId}/approve`), {
+    method: 'PUT',
+  });
+
+  if (!response.ok) {
+    throw new Error('Failed to approve doctor');
+  }
+
+  return await response.json();
+};
+
+/**
+ * Reject a doctor registration.
+ * @param {number} doctorId
+ */
+export const rejectDoctor = async (doctorId) => {
+  const response = await fetch(getFullUrl(`/doctors/admin/${doctorId}/reject`), {
+    method: 'PUT',
+  });
+
+  if (!response.ok) {
+    throw new Error('Failed to reject doctor');
+  }
+
+  return await response.json();
+};
+
+/**
  * Update Doctor Profile Image
  * @param {string} email - Doctor email
  * @param {string} profileImage - Base64 image string
@@ -106,4 +166,42 @@ export const updateDoctorProfileImage = async (email, profileImage) => {
   }
 
   return await response.json();
+};
+
+/**
+ * Get all appointments booked for a doctor from DB.
+ * @param {number} doctorId
+ * @returns {Promise<Array>}
+ */
+export const getDoctorAppointmentsFromDb = async (doctorId) => {
+  const response = await fetch(
+    `${getFullUrl(ENDPOINTS.SLOT_DOCTOR_APPOINTMENTS)}/${doctorId}`
+  );
+
+  if (!response.ok) {
+    let errorMessage = 'Failed to fetch appointments';
+    try {
+      const errorData = await response.json();
+      errorMessage = errorData?.message || errorData?.error || errorMessage;
+    } catch {
+      // ignore JSON parse error and keep fallback message
+    }
+    throw new Error(errorMessage);
+  }
+
+  const data = await response.json();
+  if (!Array.isArray(data)) return [];
+
+  return data.map((item) => ({
+    id: item.id,
+    userId: Number(item.userId ?? item.bookedByUserId ?? item.patientId),
+    doctorId: Number(item.doctorId),
+    patientName: item.patientName || item.fullName || 'Patient',
+    patientProfileImage: item.patientProfileImage || '',
+    date: item.date || item.slotDate,
+    time: item.time || item.slotTime,
+    clinicLocation: item.clinicLocation || '',
+    fee: Number(item.fee || 0),
+    status: item.status || 'confirmed',
+  }));
 };

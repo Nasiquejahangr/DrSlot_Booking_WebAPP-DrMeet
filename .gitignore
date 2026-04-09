@@ -30,3 +30,4 @@ target/
 Frontend/docs/
 *.API_REFACTORING_SUMMARY.md
 *.SLOTS_IMPLEMENTATION.md
+*.Documentation.md

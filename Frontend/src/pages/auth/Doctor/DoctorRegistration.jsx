@@ -46,7 +46,7 @@ function DoctorRegistration() {
 
 
 
-    function handleSubmit(e) {
+    async function handleSubmit(e) {
         e.preventDefault();
 
 
@@ -74,17 +74,6 @@ function DoctorRegistration() {
             toast.error("Please enter a valid fee (between 0 and 1000)!");
             return;
         }
-        // Storing doctor object inside doctor array
-        const doctorarray = JSON.parse(localStorage.getItem("doctors")) || [];
-
-        //  Check duplicate email
-        const emailExists = doctorarray.find(doc => doc.email === email);
-
-        if (emailExists) {
-            toast.error("Doctor already registered with this email!");
-            return;
-        }
-
         // for certificate if not upload toste message
         if (!certificate) {
             toast.error("Please upload your certificate!");
@@ -107,51 +96,23 @@ function DoctorRegistration() {
             certificate: certificate ? certificate.name : null,
             profileImage: null,
             about: 'I am a dedicated healthcare professional committed to providing exceptional patient care...',
+            approvalStatus: 'PENDING',
             //slot for user managed by doctor in dashboard
             slots: "{}"
         };
 
-        //  Add to array
-        doctorarray.push(newDoctor);
-        console.log(newDoctor);
-
-        //
         newDoctor.slots = JSON.stringify(newDoctor.slots);
         newDoctor.fee = Number(newDoctor.fee);
         newDoctor.workingExperience = Number(newDoctor.workingExperience);
 
-
-        //now pussing data to Springboot 
-        doctorApi.doctorRegister(newDoctor)
-            .then(() => {
-                // console.log("Doctor saved:", data);
-                //  success message
-                toast.success("Registration Successful");
-
-                //  IMPORTANT: login page pe bhej
-                window.location.href = "/login";
-            })
-            .catch(err => {
-                console.error(err);
-                toast.error("Registration failed");
-            });
-
-
-
-
-
-        // //  Save back to localStorage
-        // localStorage.setItem("doctors", JSON.stringify(doctorarray));
-        // // Save login session
-        // localStorage.setItem("token", "doctorLoggedIn");
-        // localStorage.setItem("userType", "doctor");
-        // localStorage.setItem("currentDoctorId", newDoctor.id);
-
-        // toast.success("Doctor registration successful!");
-
-        // setTimeout(() => {
-        //     navigate("/Dashboard");
-        // }, 1500);
+        try {
+            await doctorApi.doctorRegister(newDoctor);
+            toast.success("Registration submitted. Waiting for admin approval.");
+            window.location.href = "/login";
+        } catch (err) {
+            console.error(err);
+            toast.error(err?.message || "Registration failed");
+        }
     }
 
     return (

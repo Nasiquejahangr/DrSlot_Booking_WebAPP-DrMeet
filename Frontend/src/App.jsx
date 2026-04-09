@@ -20,6 +20,7 @@ import Vieslot from './pages/users/ViewSlot';
 import DoctorAppointments from './pages/Doctor/DoctorAppointments';
 import ManageSlots from './pages/Doctor/MagangeSlot';
 import Payment from './Payment/Payment';
+import DoctorApprovals from './pages/Admin/DoctorApprovals';
 
 function App() {
 
@@ -28,7 +29,7 @@ function App() {
   const location = useLocation();
 
   // const hideLayout = location.pathname === "/login" || location.pathname === "/register";
-  const authRoutes = ["/login", "/register", "/DoctorRegister"];
+  const authRoutes = ["/login", "/register", "/DoctorRegister", "/admin"];
   const hideLayout = authRoutes.includes(location.pathname);
 
   const userType = (sessionStorage.getItem("userType") || localStorage.getItem("userType") || "").toLowerCase().trim();
@@ -143,6 +144,11 @@ function App() {
           <Route path='/DoctorAppointments' element={
             <motion.div {...pageFade}>
               <DoctorAppointments />
+            </motion.div>
+          } />
+          <Route path='/admin' element={
+            <motion.div {...pageFade}>
+              <DoctorApprovals />
             </motion.div>
           } />
         </Routes>

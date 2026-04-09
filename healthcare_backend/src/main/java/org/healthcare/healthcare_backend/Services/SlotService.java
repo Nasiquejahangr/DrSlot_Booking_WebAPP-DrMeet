@@ -70,7 +70,19 @@ public class SlotService {
      */
     public SlotEntity bookSlot(Long doctorId, LocalDate date, String time, Long userId) {
         SlotEntity slot = slotRepository.findByDoctorIdAndSlotDateAndSlotTime(doctorId, date, time)
-                .orElseThrow(() -> new RuntimeException("Slot not found"));
+            .orElseGet(() -> {
+                DoctorEntity doctor = doctorRepository.findById(doctorId)
+                    .orElseThrow(() -> new RuntimeException("Doctor not found with ID: " + doctorId));
+
+                SlotEntity newSlot = new SlotEntity();
+                newSlot.setDoctor(doctor);
+                newSlot.setSlotDate(date);
+                newSlot.setSlotTime(time);
+                newSlot.setIsBooked(false);
+                newSlot.setCreatedAt(LocalDateTime.now());
+                newSlot.setUpdatedAt(LocalDateTime.now());
+                return newSlot;
+            });
 
         if (slot.getIsBooked()) {
             throw new RuntimeException("Slot is already booked");
@@ -108,7 +120,14 @@ public class SlotService {
      * Get all booked appointments for a patient
      */
     public List<SlotEntity> getPatientAppointments(Long userId) {
-        return slotRepository.findByBookedByUserIdAndIsBookedTrue(userId);
+        return slotRepository.findBookedAppointmentsWithDoctorByUserId(userId);
+    }
+
+    /**
+     * Get all booked appointments for a doctor
+     */
+    public List<SlotEntity> getDoctorAppointments(Long doctorId) {
+        return slotRepository.findBookedAppointmentsByDoctorId(doctorId);
     }
 
     /**
