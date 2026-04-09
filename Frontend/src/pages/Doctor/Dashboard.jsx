@@ -4,10 +4,13 @@ import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import { getDoctorAppointments } from '../../util/Localstorage';
 import { doctorApi } from '../../api/index';
+import { getDoctorAppointmentsFromDb } from '../../api/doctorApi';
 
 function Dashboard() {
     const navigate = useNavigate();
     const [doctor, setDoctor] = useState(null);
+    const [appointments, setAppointments] = useState([]);
+    const [loading, setLoading] = useState(true);
 
     useEffect(() => {
         const userType = (sessionStorage.getItem("userType") || localStorage.getItem("userType") || "").toLowerCase();
@@ -27,13 +30,29 @@ function Dashboard() {
                 if (data?.id) {
                     sessionStorage.setItem("currentDoctorId", data.id);
                     localStorage.setItem("currentDoctorId", data.id);
+                    loadAppointments(data.id);
                 }
             })
             .catch((err) => {
                 console.error(err);
                 toast.error("Failed to load doctor data");
+                setLoading(false);
             });
     }, [navigate]);
+
+    const loadAppointments = async (doctorId) => {
+        try {
+            setLoading(true);
+            const dbAppointments = await getDoctorAppointmentsFromDb(doctorId);
+            setAppointments(dbAppointments);
+        } catch (error) {
+            console.error(error);
+            const localAppointments = getDoctorAppointments(Number(doctorId));
+            setAppointments(localAppointments);
+        } finally {
+            setLoading(false);
+        }
+    };
 
 
     //for stats and welcome message
@@ -42,12 +61,18 @@ function Dashboard() {
     const doctorName = currentDoctor.fullName || "Doctor";
     const doctorSpecialization = currentDoctor.specialization || "";
 
-    const appointments = getDoctorAppointments(Number(currentDoctorId));
-    const today = new Date(); today.setHours(0, 0, 0, 0);
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
     const todayCount = appointments.filter(a => {
-        const d = new Date(a.date); d.setHours(0, 0, 0, 0);
+        const d = new Date(a.date);
+        d.setHours(0, 0, 0, 0);
         return d.getTime() === today.getTime();
     }).length;
+
+    const uniquePatients = new Set(appointments.map(a => a.userId)).size;
+
+    const totalEarnings = appointments.reduce((sum, a) => sum + Number(a.fee || 0), 0);
 
     const handleLogout = () => {
         sessionStorage.removeItem('token');
@@ -67,7 +92,7 @@ function Dashboard() {
         { icon: HiCalendar, label: "Today's", value: todayCount, subtitle: 'Appointments', color: 'text-blue-600', bg: 'bg-blue-50' },
         { icon: HiTrendingUp, label: 'Total', value: appointments.length, subtitle: 'Bookings', color: 'text-violet-600', bg: 'bg-violet-50' },
         { icon: HiStar, label: 'Rating', value: currentDoctor.rating || '—', subtitle: 'Score', color: 'text-amber-500', bg: 'bg-amber-50' },
-        { icon: HiUsers, label: 'Patients', value: appointments.length, subtitle: 'Served', color: 'text-emerald-600', bg: 'bg-emerald-50' },
+        { icon: HiUsers, label: 'Patients', value: uniquePatients, subtitle: 'Served', color: 'text-emerald-600', bg: 'bg-emerald-50' },
     ];
 
     const quickActions = [
@@ -102,18 +127,24 @@ function Dashboard() {
 
                 {/* Stats Grid */}
                 <div className="grid grid-cols-2 gap-3">
-                    {stats.map((s, i) => {
-                        const Icon = s.icon;
-                        return (
-                            <div key={i} className="bg-white rounded-2xl p-4 shadow-sm border border-gray-100">
-                                <div className={`${s.bg} w-10 h-10 rounded-xl flex items-center justify-center mb-3`}>
-                                    <Icon className={`w-5 h-5 ${s.color}`} />
+                    {loading ? (
+                        <div className="col-span-2 bg-white rounded-2xl p-4 text-center text-gray-500">
+                            Loading...
+                        </div>
+                    ) : (
+                        stats.map((s, i) => {
+                            const Icon = s.icon;
+                            return (
+                                <div key={i} className="bg-white rounded-2xl p-4 shadow-sm border border-gray-100">
+                                    <div className={`${s.bg} w-10 h-10 rounded-xl flex items-center justify-center mb-3`}>
+                                        <Icon className={`w-5 h-5 ${s.color}`} />
+                                    </div>
+                                    <p className="text-2xl font-bold text-gray-900">{s.value}</p>
+                                    <p className="text-xs text-gray-500 mt-0.5">{s.label} {s.subtitle}</p>
                                 </div>
-                                <p className="text-2xl font-bold text-gray-900">{s.value}</p>
-                                <p className="text-xs text-gray-500 mt-0.5">{s.label} {s.subtitle}</p>
-                            </div>
-                        );
-                    })}
+                            );
+                        })
+                    )}
                 </div>
 
                 {/* Earnings Card */}
@@ -126,7 +157,7 @@ function Dashboard() {
                             <div>
                                 <p className="text-xs text-gray-500">This Month's Earnings</p>
                                 <p className="text-2xl font-bold text-gray-900">
-                                    ₹{appointments.reduce((sum, a) => sum + Number(a.fee || 0), 0).toLocaleString()}
+                                    ₹{totalEarnings.toLocaleString()}
                                 </p>
                             </div>
                         </div>

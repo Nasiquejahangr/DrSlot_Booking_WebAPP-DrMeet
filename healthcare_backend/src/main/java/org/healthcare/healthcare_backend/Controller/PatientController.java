@@ -21,9 +21,14 @@ public class PatientController {
 
 
     @PostMapping("/register")
-    public PatientEntity registerPatient(@RequestBody PatientEntity patient) {
-        System.out.println(patient);
-        return patientService.registerPatient(patient);
+    public ResponseEntity<?> registerPatient(@RequestBody PatientEntity patient) {
+        try {
+            PatientEntity savedPatient = patientService.registerPatient(patient);
+            return ResponseEntity.ok(savedPatient);
+        } catch (RuntimeException ex) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(Map.of("message", ex.getMessage()));
+        }
     }
 
     @PostMapping("/login")

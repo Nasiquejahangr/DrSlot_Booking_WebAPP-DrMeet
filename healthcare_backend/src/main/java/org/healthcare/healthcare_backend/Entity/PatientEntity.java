@@ -17,8 +17,9 @@ public class PatientEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private long id;
+    private Long id;
 
+    @Column(name = "role")
     private String role = "PATIENT";
 
     @Column(name = "patient_name")
@@ -28,4 +29,11 @@ public class PatientEntity {
     private String email;
     private String password;
     private String phoneNumber;
+
+    @PrePersist
+    protected void onCreate() {
+        if (role == null || role.isBlank()) {
+            role = "PATIENT";
+        }
+    }
 }

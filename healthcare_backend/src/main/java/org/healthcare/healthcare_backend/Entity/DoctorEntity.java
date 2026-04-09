@@ -41,6 +41,9 @@ public class DoctorEntity {
 
     private Double fee;
 
+    @Column(name = "approval_status")
+    private String approvalStatus = "PENDING";
+
     @Column(length = 1000)
     private String about;
 
@@ -60,6 +63,9 @@ public class DoctorEntity {
     protected void onCreate() {
         if (role == null || role.isBlank()) {
             role = "DOCTOR";
+        }
+        if (approvalStatus == null || approvalStatus.isBlank()) {
+            approvalStatus = "PENDING";
         }
     }
 }

@@ -53,6 +53,42 @@ public class DoctorController {
         return doctorService.getAllDoctors();
     }
 
+    // admin: get all doctors
+    @GetMapping("/admin/all")
+    public java.util.List<DoctorEntity> getAllDoctorsForAdmin() {
+        return doctorService.getAllDoctorsForAdmin();
+    }
+
+    // admin: get pending doctors
+    @GetMapping("/admin/pending")
+    public java.util.List<DoctorEntity> getPendingDoctors() {
+        return doctorService.getPendingDoctors();
+    }
+
+    // admin: approve doctor
+    @PutMapping("/admin/{doctorId}/approve")
+    public ResponseEntity<?> approveDoctor(@PathVariable Long doctorId) {
+        try {
+            DoctorEntity updatedDoctor = doctorService.approveDoctor(doctorId);
+            return ResponseEntity.ok(updatedDoctor);
+        } catch (RuntimeException ex) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(Map.of("message", ex.getMessage()));
+        }
+    }
+
+    // admin: reject doctor
+    @PutMapping("/admin/{doctorId}/reject")
+    public ResponseEntity<?> rejectDoctor(@PathVariable Long doctorId) {
+        try {
+            DoctorEntity updatedDoctor = doctorService.rejectDoctor(doctorId);
+            return ResponseEntity.ok(updatedDoctor);
+        } catch (RuntimeException ex) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(Map.of("message", ex.getMessage()));
+        }
+    }
+
     // update doctor profile image
     @PutMapping("/profile-image")
     public ResponseEntity<?> updateDoctorProfileImage(@RequestBody Map<String, String> request) {

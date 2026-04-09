@@ -5,7 +5,7 @@ import org.healthcare.healthcare_backend.Repository.DoctorRepo;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
-import java.time.LocalDate;
+import java.util.stream.Collectors;
 
 @Service
 public class DoctorService {
@@ -16,9 +16,6 @@ public class DoctorService {
 
     @Autowired
     private BCryptPasswordEncoder passwordEncoder;
-
-    @Autowired
-    private SlotService slotService;
 
     public DoctorEntity registerDoctor(DoctorEntity doctor) {
 
@@ -35,18 +32,16 @@ public class DoctorService {
         //  2.1 Always enforce doctor role
         doctor.setRole("DOCTOR");
 
+        //  2.2 New doctors must be approved by admin before login/search visibility
+        doctor.setApprovalStatus("PENDING");
+
         //  3. Default slots
         if (doctor.getSlots() == null) {
             doctor.setSlots("{}");
         }
 
         //  4. Save to DB
-        DoctorEntity savedDoctor = doctorRepository.save(doctor);
-
-        //  5. Create 20 default slots for today
-        slotService.createDefaultSlots(savedDoctor.getId(), LocalDate.now());
-
-        return savedDoctor;
+        return doctorRepository.save(doctor);
     }
 
     //For Login
@@ -60,6 +55,14 @@ public class DoctorService {
 
         if (!passwordEncoder.matches(password, doctor.getPassword())) {
             throw new RuntimeException("Invalid password");
+        }
+
+        if (doctor.getApprovalStatus() == null || "PENDING".equalsIgnoreCase(doctor.getApprovalStatus())) {
+            throw new RuntimeException("Your doctor profile is pending admin approval");
+        }
+
+        if ("REJECTED".equalsIgnoreCase(doctor.getApprovalStatus())) {
+            throw new RuntimeException("Your doctor profile has been rejected by admin");
         }
 
 
@@ -79,7 +82,34 @@ public class DoctorService {
 
     //getting all doctors for search and home page
     public java.util.List<DoctorEntity> getAllDoctors() {
+        return doctorRepository.findAll()
+                .stream()
+                .filter(doctor -> doctor.getApprovalStatus() == null || "APPROVED".equalsIgnoreCase(doctor.getApprovalStatus()))
+                .collect(Collectors.toList());
+    }
+
+    public java.util.List<DoctorEntity> getAllDoctorsForAdmin() {
         return doctorRepository.findAll();
+    }
+
+    public java.util.List<DoctorEntity> getPendingDoctors() {
+        return doctorRepository.findByApprovalStatus("PENDING");
+    }
+
+    public DoctorEntity approveDoctor(Long doctorId) {
+        DoctorEntity doctor = doctorRepository.findById(doctorId)
+                .orElseThrow(() -> new RuntimeException("Doctor not found"));
+
+        doctor.setApprovalStatus("APPROVED");
+        return doctorRepository.save(doctor);
+    }
+
+    public DoctorEntity rejectDoctor(Long doctorId) {
+        DoctorEntity doctor = doctorRepository.findById(doctorId)
+                .orElseThrow(() -> new RuntimeException("Doctor not found"));
+
+        doctor.setApprovalStatus("REJECTED");
+        return doctorRepository.save(doctor);
     }
 
     // update doctor profile image

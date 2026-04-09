@@ -1,336 +1,323 @@
-import React, { useState } from 'react';
+import { useMemo, useState } from 'react';
+import { useLocation, useNavigate } from 'react-router-dom';
+import { FaCalendarAlt, FaClock, FaMapMarkerAlt, FaUserMd, FaUser } from 'react-icons/fa';
 import { toast } from 'react-toastify';
-import { API_BASE_URL } from '../api/config.js';
-
-const initialFormState = {
-	name: '',
-	email: '',
-	phone: '',
-	amount: '500',
-	note: '',
-};
-
-const paymentEndpoint =
-	import.meta.env.VITE_RAZORPAY_ORDER_API_URL || `${API_BASE_URL}/payments/create-order`;
+import { createPaymentOrder, getPaymentPublicKey, verifyPaymentOrder } from '../api/userApi';
 
 function Payment() {
-	const [formData, setFormData] = useState(initialFormState);
-	const [loading, setLoading] = useState(false);
-	const [backendResponse, setBackendResponse] = useState(null);
+    const navigate = useNavigate();
+    const location = useLocation();
+    const [isPaying, setIsPaying] = useState(false);
 
-	const handleChange = (event) => {
-		const { name, value } = event.target;
-		setFormData((current) => ({
-			...current,
-			[name]: value,
-		}));
-	};
+    const paymentData = location.state || {};
+    const doctor = paymentData?.doctor || null;
+    const user = paymentData?.user || null;
+    const booking = paymentData?.booking || null;
 
-	const validateForm = () => {
-		const trimmedName = formData.name.trim();
-		const trimmedEmail = formData.email.trim();
-		const trimmedPhone = formData.phone.trim();
-		const amountValue = Number(formData.amount);
+    const isValidData = Boolean(
+        doctor?.id &&
+        user?.id &&
+        booking?.date &&
+        booking?.time
+    );
 
-		if (!trimmedName) {
-			toast.error('Please enter your name.');
-			return false;
-		}
+    const payableAmount = useMemo(() => Number(doctor?.fee || 0), [doctor]);
+    const formattedDate = booking?.date
+        ? new Date(booking.date).toLocaleDateString('en-US', {
+            weekday: 'short',
+            month: 'short',
+            day: 'numeric',
+            year: 'numeric',
+        })
+        : '';
 
-		if (!trimmedEmail || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(trimmedEmail)) {
-			toast.error('Please enter a valid email address.');
-			return false;
-		}
+    const loadRazorpayScript = () =>
+        new Promise((resolve) => {
+            if (window.Razorpay) {
+                resolve(true);
+                return;
+            }
 
-		if (!trimmedPhone || !/^[0-9+\-()\s]{7,15}$/.test(trimmedPhone)) {
-			toast.error('Please enter a valid phone number.');
-			return false;
-		}
+            const script = document.createElement('script');
+            script.src = 'https://checkout.razorpay.com/v1/checkout.js';
+            script.onload = () => resolve(true);
+            script.onerror = () => resolve(false);
+            document.body.appendChild(script);
+        });
 
-		if (!Number.isFinite(amountValue) || amountValue <= 0) {
-			toast.error('Please enter a valid amount.');
-			return false;
-		}
+    const handlePayNow = async () => {
+        if (!isValidData || isPaying) {
+            return;
+        }
 
-		return true;
-	};
+        try {
+            setIsPaying(true);
 
-	const handleSubmit = async (event) => {
-		event.preventDefault();
+            const isScriptLoaded = await loadRazorpayScript();
+            if (!isScriptLoaded) {
+                throw new Error('Unable to load Razorpay. Please check internet and retry.');
+            }
 
-		if (!validateForm()) {
-			return;
-		}
+            const order = await createPaymentOrder({
+                name: user?.name || 'Patient',
+                email: user?.email || '',
+                phoneNumber: String(user?.phoneNumber || '').replace(/\D/g, '').slice(-10),
+                amount: payableAmount,
+                userId: Number(user.id),
+                doctorId: Number(doctor.id),
+                doctorName: doctor.name || 'Doctor',
+                appointmentDate: booking.date,
+                appointmentTime: booking.time,
+            });
 
-		setLoading(true);
-		setBackendResponse(null);
+            const orderKey = String(order?.key || '').trim();
+            const fetchedKey = await getPaymentPublicKey();
+            const cleanKey = orderKey || fetchedKey;
+            const cleanOrderId = String(order?.orderId || '').trim();
+            const cleanContact = String(user?.phoneNumber || '').replace(/\D/g, '').slice(-10);
 
-		const payload = {
-			name: formData.name.trim(),
-			email: formData.email.trim(),
-			phone: formData.phone.trim(),
-			amount: Number(formData.amount),
-			note: formData.note.trim(),
-		};
+            if (!cleanOrderId || !cleanKey) {
+                throw new Error('Invalid payment order response.');
+            }
 
-		try {
-			const response = await fetch(paymentEndpoint, {
-				method: 'POST',
-				headers: {
-					'Content-Type': 'application/json',
-				},
-				body: JSON.stringify(payload),
-			});
+            if (!(Number(order?.amount) > 0)) {
+                throw new Error('Invalid payment amount.');
+            }
 
-			const responseData = await response.json().catch(() => null);
+            const options = {
+                key: cleanKey,
+                amount: Number(order.amount),
+                currency: order.currency || 'INR',
+                name: 'DrMeet',
+                description: `Appointment with ${doctor.name || 'Doctor'}`,
+                order_id: cleanOrderId,
+                prefill: {
+                    name: user?.name || 'Patient',
+                    email: user?.email || '',
+                    ...(cleanContact ? { contact: cleanContact } : {}),
+                },
+                notes: {
+                    doctorId: String(doctor.id),
+                    doctorName: doctor.name || 'Doctor',
+                    appointmentDate: booking.date,
+                    appointmentTime: booking.time,
+                    userId: String(user.id),
+                },
+                theme: {
+                    color: '#1a79f7',
+                },
+                handler: async (response) => {
+                    try {
+                        await verifyPaymentOrder(response);
+                        toast.success('Payment successful. Appointment booked!');
+                        navigate('/appointment');
+                    } catch (verifyError) {
+                        toast.error(verifyError?.message || 'Payment verification failed.');
+                    } finally {
+                        setIsPaying(false);
+                    }
+                },
+                modal: {
+                    ondismiss: () => {
+                        setIsPaying(false);
+                        toast.info('Payment cancelled.');
+                    },
+                },
+                retry: {
+                    enabled: true,
+                    max_count: 2,
+                },
+            };
 
-			if (!response.ok) {
-				throw new Error(responseData?.message || 'Unable to create payment order.');
-			}
+            const paymentObject = new window.Razorpay(options);
+            paymentObject.on('payment.failed', (response) => {
+                setIsPaying(false);
+                const reason = response?.error?.description || response?.error?.reason || 'Payment failed.';
+                toast.error(reason);
+            });
+            paymentObject.open();
+        } catch (error) {
+            toast.error(error?.message || 'Payment failed. Please try again.');
+            setIsPaying(false);
+        }
+    };
 
-			setBackendResponse(responseData);
-			toast.success('Payment details sent to the backend successfully.');
-		} catch (error) {
-			toast.error(error.message || 'Something went wrong while creating payment.');
-		} finally {
-			setLoading(false);
-		}
-	};
+    if (!isValidData) {
+        return (
+            <div className="min-h-screen bg-linear-to-b from-blue-50 via-white to-gray-50 p-4 flex items-center justify-center">
+                <div className="max-w-md w-full bg-white rounded-4xl border border-blue-100 shadow-xl p-7 text-center relative overflow-hidden">
+                    <div className="absolute -top-10 -right-10 w-32 h-32 rounded-full bg-blue-100/60 blur-2xl" />
+                    <div className="absolute -bottom-8 -left-8 w-28 h-28 rounded-full bg-indigo-100/60 blur-2xl" />
+                    <div className="relative">
+                        <div className="w-16 h-16 mx-auto mb-4 rounded-2xl bg-blue-50 flex items-center justify-center shadow-sm">
+                            <FaUserMd className="text-[#1a79f7] text-3xl" />
+                        </div>
+                        <h2 className="text-2xl font-bold text-gray-900 mb-2">Payment details missing</h2>
+                        <p className="text-gray-600 mb-6">Please select doctor, date and time first.</p>
+                        <button
+                            onClick={() => navigate('/search')}
+                            className="w-full bg-[#1a79f7] hover:bg-[#1563d1] text-white font-semibold py-3.5 px-6 rounded-2xl transition-all shadow-md"
+                        >
+                            Go to Search
+                        </button>
+                    </div>
+                </div>
+            </div>
+        );
+    }
 
-	return (
-		<div
-			className="payment-page"
-			style={{
-				minHeight: '100vh',
-				padding: '32px 16px',
-				background:
-					'radial-gradient(circle at top, rgba(14, 165, 233, 0.14), transparent 28%), linear-gradient(135deg, #f8fbff 0%, #eef6ff 48%, #fefefe 100%)',
-			}}
-		>
-			<div
-				style={{
-					maxWidth: '1100px',
-					margin: '0 auto',
-					display: 'grid',
-					gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))',
-					gap: '24px',
-					alignItems: 'stretch',
-				}}
-			>
-				<section
-					style={{
-						background: 'rgba(255, 255, 255, 0.88)',
-						backdropFilter: 'blur(18px)',
-						border: '1px solid rgba(148, 163, 184, 0.18)',
-						borderRadius: '28px',
-						padding: '32px',
-						boxShadow: '0 24px 60px rgba(15, 23, 42, 0.08)',
-					}}
-				>
-					<div
-						style={{
-							display: 'inline-flex',
-							alignItems: 'center',
-							gap: '8px',
-							padding: '8px 14px',
-							borderRadius: '999px',
-							background: 'rgba(14, 165, 233, 0.12)',
-							color: '#0369a1',
-							fontWeight: 600,
-							fontSize: '14px',
-							marginBottom: '18px',
-						}}
-					>
-						Razorpay test checkout
-					</div>
+    return (
+        <div className="min-h-screen bg-linear-to-b from-blue-50 via-white to-slate-50 p-4 pb-28">
+            <div className="max-w-3xl mx-auto">
+                <div className="relative overflow-hidden rounded-4xl bg-linear-to-br from-[#1a79f7] via-[#2f8dff] to-[#0f52b6] text-white p-6 shadow-2xl mb-5">
+                    <div className="absolute -top-10 -right-10 w-40 h-40 rounded-full bg-white/10 blur-2xl" />
+                    <div className="absolute -bottom-10 -left-10 w-48 h-48 rounded-full bg-white/10 blur-2xl" />
+                    <div className="relative flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+                        <div>
+                            <p className="text-blue-100 text-sm font-medium">Secure payment</p>
+                            <h1 className="text-3xl font-bold leading-tight">Confirm your appointment</h1>
+                            <p className="text-blue-100 mt-1 max-w-xl">Review your booking summary and complete payment securely with Razorpay.</p>
+                        </div>
+                        <div className="bg-white/15 backdrop-blur-sm rounded-2xl px-5 py-4 border border-white/20 shrink-0">
+                            <p className="text-blue-100 text-xs uppercase tracking-[0.2em] mb-1">Total Payable</p>
+                            <p className="text-4xl font-extrabold">₹{payableAmount}</p>
+                        </div>
+                    </div>
+                </div>
 
-					<h1 style={{ margin: '0 0 12px', fontSize: 'clamp(2rem, 4vw, 3rem)', color: '#0f172a' }}>
-						Payment Details
-					</h1>
-					<p style={{ margin: '0 0 24px', color: '#475569', lineHeight: 1.7 }}>
-						Fill in the customer information below and send it to your backend order API for Razorpay testing.
-					</p>
+                <div className="grid gap-5 lg:grid-cols-[1.2fr_0.8fr]">
+                    <div className="space-y-5">
+                        <div className="bg-white rounded-[28px] border border-gray-100 shadow-sm p-5">
+                            <div className="flex items-center justify-between mb-4">
+                                <h2 className="text-lg font-bold text-gray-900">Doctor Information</h2>
+                                <span className="px-3 py-1 rounded-full text-xs font-semibold bg-blue-50 text-[#1a79f7] border border-blue-100">Verified doctor</span>
+                            </div>
+                            <div className="flex items-start gap-4">
+                                <div className="w-20 h-20 rounded-2xl overflow-hidden bg-blue-50 border border-blue-100 flex items-center justify-center shrink-0 shadow-sm">
+                                    {doctor.profileImage ? (
+                                        <img src={doctor.profileImage} alt={doctor.name || 'Doctor'} className="w-full h-full object-cover" />
+                                    ) : (
+                                        <FaUserMd className="text-blue-500 text-3xl" />
+                                    )}
+                                </div>
+                                <div className="min-w-0 flex-1">
+                                    <h3 className="text-2xl font-bold text-gray-900 truncate">{doctor.name || 'Doctor'}</h3>
+                                    <p className="text-sm text-gray-600 mt-0.5">{doctor.specialization || 'Specialist'}</p>
+                                    <p className="text-sm text-gray-500 mt-1">{doctor.qualification || ''}</p>
+                                    <div className="mt-3 flex items-center gap-2 text-sm text-gray-600">
+                                        <FaMapMarkerAlt className="text-[#1a79f7] shrink-0" />
+                                        <span className="truncate">{doctor.clinicLocation || doctor.hospitalName || 'Clinic'}</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
 
-					<div
-						style={{
-							display: 'grid',
-							gap: '14px',
-							padding: '18px',
-							borderRadius: '20px',
-							background: 'linear-gradient(135deg, rgba(14, 165, 233, 0.08), rgba(59, 130, 246, 0.05))',
-							color: '#1e293b',
-						}}
-					>
-						<div style={{ display: 'flex', justifyContent: 'space-between', gap: '12px' }}>
-							<span style={{ color: '#64748b' }}>Backend endpoint</span>
-							<span style={{ fontWeight: 600, textAlign: 'right', wordBreak: 'break-word' }}>{paymentEndpoint}</span>
-						</div>
-						<div style={{ display: 'flex', justifyContent: 'space-between', gap: '12px' }}>
-							<span style={{ color: '#64748b' }}>Mode</span>
-							<span style={{ fontWeight: 600 }}>Test / Sandbox</span>
-						</div>
-					</div>
-				</section>
+                        <div className="bg-white rounded-[28px] border border-gray-100 shadow-sm p-5">
+                            <div className="flex items-center justify-between mb-4">
+                                <h2 className="text-lg font-bold text-gray-900">Appointment Summary</h2>
+                                <span className="text-xs font-semibold text-green-700 bg-green-50 border border-green-100 px-3 py-1 rounded-full">Ready to pay</span>
+                            </div>
 
-				<section
-					style={{
-						background: '#ffffff',
-						borderRadius: '28px',
-						padding: '32px',
-						boxShadow: '0 18px 50px rgba(15, 23, 42, 0.08)',
-						border: '1px solid rgba(148, 163, 184, 0.16)',
-					}}
-				>
-					<form onSubmit={handleSubmit} style={{ display: 'grid', gap: '16px' }}>
-						<div>
-							<label style={labelStyle} htmlFor="name">
-								Full name
-							</label>
-							<input
-								id="name"
-								name="name"
-								type="text"
-								value={formData.name}
-								onChange={handleChange}
-								placeholder="Enter user name"
-								style={inputStyle}
-							/>
-						</div>
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                <div className="rounded-2xl bg-slate-50 border border-slate-100 p-4 flex items-center gap-3">
+                                    <div className="w-11 h-11 rounded-xl bg-white flex items-center justify-center shadow-sm">
+                                        <FaCalendarAlt className="text-[#1a79f7]" />
+                                    </div>
+                                    <div>
+                                        <p className="text-xs text-gray-500 uppercase tracking-wide">Date</p>
+                                        <p className="font-semibold text-gray-900">{formattedDate}</p>
+                                    </div>
+                                </div>
 
-						<div>
-							<label style={labelStyle} htmlFor="email">
-								Email address
-							</label>
-							<input
-								id="email"
-								name="email"
-								type="email"
-								value={formData.email}
-								onChange={handleChange}
-								placeholder="Enter email address"
-								style={inputStyle}
-							/>
-						</div>
+                                <div className="rounded-2xl bg-slate-50 border border-slate-100 p-4 flex items-center gap-3">
+                                    <div className="w-11 h-11 rounded-xl bg-white flex items-center justify-center shadow-sm">
+                                        <FaClock className="text-[#1a79f7]" />
+                                    </div>
+                                    <div>
+                                        <p className="text-xs text-gray-500 uppercase tracking-wide">Time</p>
+                                        <p className="font-semibold text-gray-900">{booking.time}</p>
+                                    </div>
+                                </div>
 
-						<div>
-							<label style={labelStyle} htmlFor="phone">
-								Phone number
-							</label>
-							<input
-								id="phone"
-								name="phone"
-								type="tel"
-								value={formData.phone}
-								onChange={handleChange}
-								placeholder="Enter phone number"
-								style={inputStyle}
-							/>
-						</div>
+                                <div className="rounded-2xl bg-slate-50 border border-slate-100 p-4 flex items-center gap-3 sm:col-span-2">
+                                    <div className="w-11 h-11 rounded-xl bg-white flex items-center justify-center shadow-sm">
+                                        <FaUser className="text-[#1a79f7]" />
+                                    </div>
+                                    <div className="min-w-0">
+                                        <p className="text-xs text-gray-500 uppercase tracking-wide">Patient</p>
+                                        <p className="font-semibold text-gray-900 truncate">{user.name || 'Patient'} {user.email ? `(${user.email})` : ''}</p>
+                                        {user.phoneNumber && <p className="text-sm text-gray-500 mt-0.5">{user.phoneNumber}</p>}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
 
-						<div>
-							<label style={labelStyle} htmlFor="amount">
-								Amount
-							</label>
-							<input
-								id="amount"
-								name="amount"
-								type="number"
-								min="1"
-								step="1"
-								value={formData.amount}
-								onChange={handleChange}
-								placeholder="500"
-								style={inputStyle}
-							/>
-						</div>
+                    <div className="space-y-5">
+                        <div className="bg-white rounded-[28px] border border-gray-100 shadow-sm p-5 sticky top-4">
+                            <h2 className="text-lg font-bold text-gray-900 mb-4">Payment Breakdown</h2>
 
-						<div>
-							<label style={labelStyle} htmlFor="note">
-								Note
-							</label>
-							<textarea
-								id="note"
-								name="note"
-								rows="4"
-								value={formData.note}
-								onChange={handleChange}
-								placeholder="Optional note for the payment order"
-								style={{ ...inputStyle, resize: 'vertical', minHeight: '110px' }}
-							/>
-						</div>
+                            <div className="space-y-3 text-sm">
+                                <div className="flex items-center justify-between py-2">
+                                    <span className="text-gray-600">Consultation fee</span>
+                                    <span className="font-semibold text-gray-900">₹{payableAmount}</span>
+                                </div>
+                                <div className="flex items-center justify-between py-2">
+                                    <span className="text-gray-600">Platform fee</span>
+                                    <span className="font-semibold text-gray-900">₹0</span>
+                                </div>
+                                <div className="h-px bg-gray-100 my-2" />
+                                <div className="flex items-center justify-between py-1">
+                                    <span className="text-base font-semibold text-gray-900">Total</span>
+                                    <span className="text-2xl font-extrabold text-[#1a79f7]">₹{payableAmount}</span>
+                                </div>
+                            </div>
 
-						<button
-							type="submit"
-							disabled={loading}
-							style={{
-								...buttonStyle,
-								opacity: loading ? 0.75 : 1,
-								cursor: loading ? 'not-allowed' : 'pointer',
-							}}
-						>
-							{loading ? 'Creating order...' : 'Proceed to Razorpay'}
-						</button>
-					</form>
+                            <div className="mt-5 rounded-2xl bg-blue-50 border border-blue-100 p-4">
+                                <p className="text-sm font-semibold text-[#1a79f7] mb-1">Secure payment powered by Razorpay</p>
+                                <p className="text-sm text-gray-600">Your payment is encrypted and your appointment is confirmed automatically after success.</p>
+                            </div>
 
-					{backendResponse && (
-						<div
-							style={{
-								marginTop: '20px',
-								padding: '18px',
-								borderRadius: '18px',
-								background: '#f8fafc',
-								border: '1px solid #e2e8f0',
-								color: '#0f172a',
-							}}
-						>
-							<div style={{ fontWeight: 700, marginBottom: '8px' }}>Backend response</div>
-							<pre style={responseStyle}>{JSON.stringify(backendResponse, null, 2)}</pre>
-						</div>
-					)}
-				</section>
-			</div>
-		</div>
-	);
+                            <div className="flex gap-3 mt-5">
+                                <button
+                                    onClick={() => navigate(-1)}
+                                    className="flex-1 bg-white border border-gray-200 text-gray-700 font-semibold py-3.5 rounded-2xl hover:bg-gray-50 transition-colors"
+                                    disabled={isPaying}
+                                >
+                                    Back
+                                </button>
+                                <button
+                                    onClick={handlePayNow}
+                                    className="flex-[1.35] bg-linear-to-r from-[#1a79f7] to-[#0f52b6] hover:from-[#1563d1] hover:to-[#0c4aa3] text-white font-semibold py-3.5 rounded-2xl transition-all shadow-lg shadow-blue-200 disabled:opacity-60 disabled:cursor-not-allowed"
+                                    disabled={isPaying}
+                                >
+                                    {isPaying ? 'Processing Payment...' : `Pay ₹${payableAmount}`}
+                                </button>
+                            </div>
+                        </div>
+
+                        <div className="bg-white rounded-[28px] border border-gray-100 shadow-sm p-5">
+                            <h3 className="text-base font-bold text-gray-900 mb-3">What happens next?</h3>
+                            <div className="space-y-3 text-sm text-gray-600">
+                                <div className="flex gap-3">
+                                    <span className="w-6 h-6 rounded-full bg-blue-50 text-[#1a79f7] flex items-center justify-center font-bold shrink-0">1</span>
+                                    <p>Payment is created with your name, email, phone number, doctor, date, and time.</p>
+                                </div>
+                                <div className="flex gap-3">
+                                    <span className="w-6 h-6 rounded-full bg-blue-50 text-[#1a79f7] flex items-center justify-center font-bold shrink-0">2</span>
+                                    <p>Razorpay opens securely for card, UPI, or wallet payment.</p>
+                                </div>
+                                <div className="flex gap-3">
+                                    <span className="w-6 h-6 rounded-full bg-blue-50 text-[#1a79f7] flex items-center justify-center font-bold shrink-0">3</span>
+                                    <p>After success, appointment status becomes <span className="font-semibold text-green-700">SUCCESS</span> and you are redirected to your appointments.</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    );
 }
-
-const labelStyle = {
-	display: 'block',
-	marginBottom: '8px',
-	fontSize: '14px',
-	fontWeight: 600,
-	color: '#334155',
-};
-
-const inputStyle = {
-	width: '100%',
-	borderRadius: '16px',
-	border: '1px solid #cbd5e1',
-	background: '#fff',
-	padding: '14px 16px',
-	fontSize: '15px',
-	color: '#0f172a',
-	outline: 'none',
-	boxSizing: 'border-box',
-};
-
-const buttonStyle = {
-	border: 'none',
-	borderRadius: '16px',
-	padding: '14px 18px',
-	fontSize: '16px',
-	fontWeight: 700,
-	color: '#fff',
-	background: 'linear-gradient(135deg, #0ea5e9, #2563eb)',
-	boxShadow: '0 16px 30px rgba(37, 99, 235, 0.25)',
-};
-
-const responseStyle = {
-	margin: 0,
-	whiteSpace: 'pre-wrap',
-	wordBreak: 'break-word',
-	fontSize: '13px',
-	lineHeight: 1.6,
-	color: '#334155',
-};
 
 export default Payment;

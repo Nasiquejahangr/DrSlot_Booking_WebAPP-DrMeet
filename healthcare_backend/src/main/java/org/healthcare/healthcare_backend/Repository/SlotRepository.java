@@ -49,7 +49,19 @@ public interface SlotRepository extends JpaRepository<SlotEntity, Long> {
     List<SlotEntity> findByBookedByUserIdAndIsBookedTrue(Long userId);
 
     /**
+     * Find all slots booked by a patient with doctor details eager-loaded
+     */
+    @Query("SELECT s FROM SlotEntity s JOIN FETCH s.doctor WHERE s.bookedByUserId = :userId AND s.isBooked = true ORDER BY s.slotDate DESC, s.slotTime ASC")
+    List<SlotEntity> findBookedAppointmentsWithDoctorByUserId(@Param("userId") Long userId);
+
+    /**
      * Delete all slots for a doctor on a specific date
      */
     void deleteByDoctorIdAndSlotDate(Long doctorId, LocalDate slotDate);
+
+    /**
+     * Find all booked slots for a doctor (appointments where patients booked)
+     */
+    @Query("SELECT s FROM SlotEntity s WHERE s.doctor.id = :doctorId AND s.isBooked = true ORDER BY s.slotDate DESC, s.slotTime ASC")
+    List<SlotEntity> findBookedAppointmentsByDoctorId(@Param("doctorId") Long doctorId);
 }

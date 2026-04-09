@@ -1,6 +1,5 @@
 package org.healthcare.healthcare_backend.Services;
 
-import org.healthcare.healthcare_backend.Entity.DoctorEntity;
 import org.healthcare.healthcare_backend.Entity.PatientEntity;
 import org.healthcare.healthcare_backend.Repository.PatientRepo;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -18,12 +17,36 @@ public class PatientService {
 
     public PatientEntity registerPatient(PatientEntity patient) {
 
+        if (patient == null) {
+            throw new RuntimeException("Invalid request body");
+        }
 
-        PatientEntity existingPatient = patientRepo.findByEmail(patient.getEmail());
+        String email = patient.getEmail() == null ? null : patient.getEmail().trim().toLowerCase();
+        String password = patient.getPassword();
+        String fullname = patient.getFullname() == null ? null : patient.getFullname().trim();
+
+        if (fullname == null || fullname.isBlank()) {
+            throw new RuntimeException("Full name is required");
+        }
+
+        if (email == null || email.isBlank()) {
+            throw new RuntimeException("Email is required");
+        }
+
+        if (password == null || password.isBlank()) {
+            throw new RuntimeException("Password is required");
+        }
+
+        PatientEntity existingPatient = patientRepo.findByEmail(email);
         if(existingPatient != null){
             throw new RuntimeException("Patient already registered!");
         }
-        patient.setPassword(passwordEncoder.encode(patient.getPassword()));
+
+        patient.setFullname(fullname);
+        patient.setEmail(email);
+        patient.setRole("PATIENT");
+        patient.setPassword(passwordEncoder.encode(password));
+
         return patientRepo.save(patient);
     }
 
@@ -32,7 +55,13 @@ public class PatientService {
     //login patients
     public PatientEntity loginPatient(String email, String password) {
 
-        PatientEntity patient = patientRepo.findByEmail(email);
+        if (email == null || email.isBlank() || password == null || password.isBlank()) {
+            throw new RuntimeException("Email and password are required");
+        }
+
+        String normalizedEmail = email.trim().toLowerCase();
+
+        PatientEntity patient = patientRepo.findByEmail(normalizedEmail);
 
         if(patient == null){
             throw new RuntimeException("Patient not found!");
@@ -45,7 +74,8 @@ public class PatientService {
 
     // Get patient by email for profile display
     public PatientEntity getPatientByEmail(String email) {
-        PatientEntity patient = patientRepo.findByEmail(email);
+        String normalizedEmail = email == null ? null : email.trim().toLowerCase();
+        PatientEntity patient = patientRepo.findByEmail(normalizedEmail);
         if(patient == null){
             throw new RuntimeException("Patient not found!");
         }

@@ -1,5 +1,6 @@
 // API Base Configuration
-export const API_BASE_URL = 'http://localhost:8080/api';
+// Use same-origin path to avoid mixed-content issues in HTTPS contexts.
+export const API_BASE_URL = '/api';
 
 // API Endpoints
 export const ENDPOINTS = {
@@ -14,6 +15,18 @@ export const ENDPOINTS = {
   PATIENT_REGISTER: '/patients/register',
   PATIENT_GET: '/patients/get',
   PATIENT_ALL: '/patients/all',
+
+  // Slot/Appointments Endpoints
+  SLOT_BOOK: '/slots/book',
+  SLOT_BY_DOCTOR_DATE: '/slots',
+  SLOT_INITIALIZE: '/slots/initialize',
+  SLOT_PATIENT_APPOINTMENTS: '/slots/patient',
+  SLOT_DOCTOR_APPOINTMENTS: '/slots/doctor',
+
+  // Payment Endpoints
+  PAYMENT_CREATE_ORDER: '/payment/create-order',
+  PAYMENT_VERIFY: '/payment/verify-payment',
+  PAYMENT_KEY: '/payment/key',
 };
 
 // Helper function to construct full URL

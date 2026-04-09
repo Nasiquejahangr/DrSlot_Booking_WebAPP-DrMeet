@@ -1,13 +1,13 @@
-import { useParams, useLocation } from "react-router-dom";
+import { useParams, useLocation, useNavigate } from "react-router-dom";
 import DateSelector from '../../components/DateSelector';
 import { FaMapMarkerAlt, FaStar } from 'react-icons/fa';
 import Feedback from '../../components/Feedback';
 import TimeSelector from "../../components/TimeSelector";
 import { useState, useEffect } from "react";
-import { getDoctorSlots, saveDoctorSlots, saveAppointment } from "../../util/Localstorage";
-import { getPatientDisplayName } from "../../api/userApi/index";
+import { getDoctorSlots } from "../../util/Localstorage";
 
 function ViewSlot() {
+    const navigate = useNavigate();
     const [selectedDate, setSelectedDate] = useState(null);
     const [selectedSlot, setSelectedSlot] = useState(null);
     const [bookingError, setBookingError] = useState("");
@@ -57,7 +57,7 @@ function ViewSlot() {
         setBookingSuccess("");
     };
 
-    const handleBookAppointment = () => {
+    const handleBookAppointment = async () => {
         setBookingError("");
         setBookingSuccess("");
 
@@ -65,6 +65,39 @@ function ViewSlot() {
             setBookingError("Please select a time slot before booking.");
             return;
         }
+
+        if (!selectedDate) {
+            setBookingError("Please select a date before booking.");
+            return;
+        }
+
+        const currentUserId = Number(sessionStorage.getItem("currentUserId") || localStorage.getItem("currentUserId"));
+        if (!currentUserId) {
+            setBookingError("Please log in to book an appointment.");
+            return;
+        }
+
+        const currentUserProfile =
+            JSON.parse(sessionStorage.getItem("userProfile") || "null") ||
+            JSON.parse(localStorage.getItem("userProfile") || "null");
+        const currentUserName =
+            sessionStorage.getItem("currentUserName") ||
+            localStorage.getItem("currentUserName") ||
+            currentUserProfile?.fullname ||
+            currentUserProfile?.fullName ||
+            currentUserProfile?.name ||
+            "Patient";
+        const currentUserEmail =
+            sessionStorage.getItem("patientEmail") ||
+            localStorage.getItem("patientEmail") ||
+            currentUserProfile?.email ||
+            "";
+        const currentUserPhone =
+            currentUserProfile?.phoneNumber ||
+            currentUserProfile?.phone ||
+            sessionStorage.getItem("patientPhone") ||
+            localStorage.getItem("patientPhone") ||
+            "";
 
         const currentSlots = getDoctorSlots(Number(id), selectedDate);
         const slotIndex = currentSlots.findIndex((s) => s.time === selectedSlot);
@@ -79,41 +112,30 @@ function ViewSlot() {
             return;
         }
 
-        const updatedSlots = currentSlots.map((s) =>
-            s.time === selectedSlot ? { ...s, isBooked: true } : s
-        );
-
-        saveDoctorSlots(Number(id), selectedDate, updatedSlots);
-
-        // Save appointment record for the user
-        const currentUserId = Number(sessionStorage.getItem("currentUserId") || localStorage.getItem("currentUserId"));
-        const currentUserProfile =
-            JSON.parse(sessionStorage.getItem("userProfile") || "null") ||
-            JSON.parse(localStorage.getItem("userProfile") || "null");
-        const currentUserName =
-            sessionStorage.getItem("currentUserName") ||
-            localStorage.getItem("currentUserName") ||
-            getPatientDisplayName(currentUserProfile) ||
-            sessionStorage.getItem("patientEmail") ||
-            localStorage.getItem("patientEmail") ||
-            "Patient";
-        saveAppointment({
-            userId: currentUserId,
-            doctorId: Number(id),
-            doctorName: doctorDisplayName,
-            patientName: currentUserName,
-            specialization: selectedDoctor.specialization || selectedDoctor.specialty || "",
-            qualification: selectedDoctor.qualification || "",
-            date: selectedDate,
-            time: selectedSlot,
-            fee: selectedDoctor.fee || 500,
-            profileImage: selectedDoctor.profileImage,
-            clinicLocation: selectedDoctor.clinicLocation,
+        navigate('/payment', {
+            state: {
+                doctor: {
+                    id: Number(id),
+                    name: doctorDisplayName,
+                    specialization: selectedDoctor.specialization || selectedDoctor.specialty || "",
+                    qualification: selectedDoctor.qualification || "",
+                    clinicLocation: selectedDoctor.clinicLocation || "",
+                    hospitalName: selectedDoctor.hospitalName || "",
+                    profileImage: selectedDoctor.profileImage || "",
+                    fee: Number(selectedDoctor.fee || 500),
+                },
+                user: {
+                    id: currentUserId,
+                    name: currentUserName,
+                    email: currentUserEmail,
+                    phoneNumber: currentUserPhone,
+                },
+                booking: {
+                    date: selectedDate,
+                    time: selectedSlot,
+                },
+            },
         });
-
-        setSelectedSlot(null);
-        setBookingSuccess("Appointment booked successfully!");
-        setRefreshKey((prev) => prev + 1);
     };
 
     return (
@@ -210,7 +232,7 @@ function ViewSlot() {
                      text-white font-semibold py-4 px-5 rounded-lg
                      transition-all shadow-md mt-4"
                     onClick={handleBookAppointment}
-                >Book Appointment</button>
+                >Continue to Pay</button>
             </div>
         </>
     );
