@@ -1,13 +1,15 @@
 import React, { useEffect, useState } from 'react'
-import { FaCalendarAlt, FaClock, FaMapMarkerAlt } from 'react-icons/fa'
+import { FaCalendarAlt, FaClock, FaMapMarkerAlt, FaUserMd, FaArrowRight } from 'react-icons/fa'
 import { getUserAppointments } from '../../util/Localstorage'
 import { getPatientAppointmentsFromDb } from '../../api/userApi'
+import { useNavigate } from 'react-router-dom'
 
 function Appointment() {
   const [activeTab, setActiveTab] = useState('upcoming')
   const [appointments, setAppointments] = useState([])
   const [loading, setLoading] = useState(true)
   const [fetchError, setFetchError] = useState('')
+  const navigate = useNavigate()
 
   const currentUserId = Number(sessionStorage.getItem("currentUserId") || localStorage.getItem("currentUserId"));
 
@@ -67,196 +69,167 @@ function Appointment() {
   }
 
   const filteredAppointments = filterAppointments()
+  const upcomingCount = appointments.filter(a => a.status === 'confirmed' || a.status === 'pending').length
+  const completedCount = appointments.filter(a => a.status === 'completed').length
 
   return (
-    <>
-      {/* Main Container */}
-      <div className="min-h-screen mb-20 from-blue-50 to-white mt-10 pb-10 px-3">
-        <div className="max-w-5xl mx-auto">
-          {/* Header */}
-          <div className="mb-3 text-center">
-            <h2 className='text-3xl font-bold text-gray-900 mb-1'>My Appointments</h2>
-            <p className='text-gray-600'>Manage and view your appointment history</p>
-          </div>
+    <div className="min-h-screen bg-white px-4 pb-24 pt-4 sm:px-5">
+      <div className="mx-auto w-full max-w-4xl">
+        <div className="mb-5 rounded-3xl border border-gray-100 bg-white p-4 shadow-[0_10px_30px_rgba(15,23,42,0.06)] sm:p-6">
+          <h2 className="text-2xl font-bold text-gray-900 sm:text-3xl">My Appointments</h2>
+          <p className="mt-1 text-sm text-gray-500 sm:text-base">Manage and view your appointment history</p>
 
-          <div className="flex overflow-x-auto text-center gap-4 mb-8">
-            <div className="bg-white border border-gray-200 rounded-2xl p-6 shadow-sm hover:shadow-md transition-all transform hover:-translate-y-1">
-              <div className="flex justify-between items-center gap-5">
-                <div>
-                  <p className="text-gray-500 text-sm font-medium mb-1">Total</p>
-                  <p className="text-2xl font-bold text-gray-900">{appointments.length}</p>
-                </div>
-                <div className="bg-gray-100 p-3 rounded-xl">
-                  <FaCalendarAlt className="text-gray-600 text-2xl" />
-                </div>
-              </div>
-            </div>
-            <div className="bg-white border border-blue-200 rounded-2xl p-6 shadow-sm hover:shadow-md transition-all transform hover:-translate-y-1">
-              <div className="flex justify-between items-center gap-5">
-                <div>
-                  <p className="text-gray-500 text-sm font-medium mb-1">Upcoming</p>
-                  <p className="text-2xl font-bold text-[#1a79f7]">
-                    {appointments.filter(a => a.status === 'confirmed' || a.status === 'pending').length}
-                  </p>
-                </div>
-                <div className="bg-blue-100 p-3 rounded-xl">
-                  <FaClock className="text-[#1a79f7] text-2xl" />
-                </div>
-              </div>
-            </div>
-            <div className="bg-white border border-green-200 rounded-2xl p-6 shadow-sm hover:shadow-md transition-all transform hover:-translate-y-1">
-              <div className="flex justify-between items-center gap-5">
-                <div>
-                  <p className="text-gray-500 text-sm font-medium mb-1">Completed</p>
-                  <p className="text-2xl font-bold text-green-600">
-                    {appointments.filter(a => a.status === 'completed').length}
-                  </p>
-                </div>
-                <div className="bg-green-100 p-3 rounded-xl">
-                  <FaCalendarAlt className="text-green-600 text-2xl" />
-                </div>
-              </div>
+          <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-3">
+            <StatCard title="Total" value={appointments.length} tone="gray" icon={<FaCalendarAlt />} />
+            <StatCard title="Upcoming" value={upcomingCount} tone="blue" icon={<FaClock />} />
+            <div className="col-span-2 sm:col-span-1">
+              <StatCard title="Completed" value={completedCount} tone="green" icon={<FaCalendarAlt />} />
             </div>
           </div>
+        </div>
 
-          {/* Tabs */}
-          <div className="bg-white rounded-2xl shadow-sm mb-6 p-1">
-            <div className="flex gap-1">
+        <div className="mb-5 rounded-2xl border border-gray-100 bg-white p-1 shadow-sm">
+          <div className="grid grid-cols-3 gap-1">
+            {['upcoming', 'past', 'all'].map((tab) => (
               <button
-                onClick={() => setActiveTab('upcoming')}
-                className={`flex-1 py-3 px-6 font-semibold rounded-xl transition-all ${activeTab === 'upcoming'
-                  ? 'bg-[#1a79f7] text-white shadow-md'
+                key={tab}
+                onClick={() => setActiveTab(tab)}
+                className={`rounded-xl px-3 py-2.5 text-sm font-semibold capitalize transition-all ${activeTab === tab
+                  ? 'bg-[#1a79f7] text-white shadow-sm'
                   : 'text-gray-600 hover:bg-gray-50'
                   }`}
               >
-                Upcoming
+                {tab}
               </button>
-              <button
-                onClick={() => setActiveTab('past')}
-                className={`flex-1 py-3 px-6 font-semibold rounded-xl transition-all ${activeTab === 'past'
-                  ? 'bg-[#1a79f7] text-white shadow-md'
-                  : 'text-gray-600 hover:bg-gray-50'
-                  }`}
-              >
-                Past
-              </button>
-              <button
-                onClick={() => setActiveTab('all')}
-                className={`flex-1 py-3 px-6 font-semibold rounded-xl transition-all ${activeTab === 'all'
-                  ? 'bg-[#1a79f7] text-white shadow-md'
-                  : 'text-gray-600 hover:bg-gray-50'
-                  }`}
-              >
-                All
-              </button>
-            </div>
+            ))}
           </div>
+        </div>
 
+        {loading ? (
+          <div className="rounded-3xl border border-gray-100 bg-white px-4 py-12 text-center shadow-[0_10px_30px_rgba(15,23,42,0.06)]">
+            <div className="mx-auto mb-4 h-12 w-12 animate-spin rounded-full border-4 border-blue-100 border-t-[#1a79f7]" />
+            <p className="font-medium text-gray-600">Loading appointments...</p>
+          </div>
+        ) : (
+          <>
+            {fetchError && (
+              <div className="mb-4 rounded-2xl border border-yellow-200 bg-yellow-50 p-4 text-sm text-yellow-700">
+                {fetchError} Showing cached appointments.
+              </div>
+            )}
 
-          {/* Appointments List */}
-          {loading ? (
-            <div className="bg-white border border-gray-200 rounded-2xl p-10 text-center text-gray-600">
-              Loading appointments...
-            </div>
-          ) : (
-            <>
-              {fetchError && (
-                <div className="bg-yellow-50 border border-yellow-200 rounded-xl p-4 mb-4 text-sm text-yellow-700">
-                  {fetchError} Showing cached appointments.
+            {filteredAppointments.length === 0 ? (
+              <div className="rounded-3xl border-2 border-dashed border-gray-200 bg-white px-4 py-12 text-center shadow-[0_10px_30px_rgba(15,23,42,0.06)]">
+                <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-blue-50">
+                  <FaCalendarAlt className="text-2xl text-[#1a79f7]" />
                 </div>
-              )}
-
-              {filteredAppointments.length === 0 ? (
-                <div className="bg-white border-2 border-dashed border-gray-300 rounded-2xl p-16 text-center">
-                  <div className="bg-gray-100 w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-4">
-                    <FaCalendarAlt className="text-gray-400 text-4xl" />
-                  </div>
-                  <h3 className="text-2xl font-bold text-gray-900 mb-2">No appointments found</h3>
-                  <p className="text-gray-500 text-lg mb-6">
-                    {activeTab === 'upcoming'
-                      ? 'You have no upcoming appointments. Book an appointment to see it here.'
-                      : 'No appointments in this category.'}
-                  </p>
-                  <button className="bg-[#1a79f7] hover:bg-[#1563d1] text-white font-semibold py-3 px-8 rounded-xl transition-colors shadow-md">
-                    Book Appointment
-                  </button>
-                </div>
-              ) : (
-                <div className="space-y-5">
-                  {filteredAppointments.map((appointment) => (
-                    <div key={appointment.id} className="bg-white border border-gray-200 rounded-2xl p-6 shadow-sm hover:shadow-lg transition-all">
-                      <div className="flex flex-col md:flex-row items-start gap-5">
-                        {/* Doctor Image */}
-                        <div className="rounded-2xl w-20 h-20 flex items-center justify-center overflow-hidden bg-blue-50 shrink-0 border-2 border-blue-200">
+                <h3 className="text-xl font-bold text-gray-900 sm:text-2xl">No appointments found</h3>
+                <p className="mx-auto mt-2 max-w-md text-sm text-gray-500 sm:text-base">
+                  {activeTab === 'upcoming'
+                    ? 'You have no upcoming appointments. Book an appointment to see it here.'
+                    : 'No appointments in this category.'}
+                </p>
+                <button
+                  onClick={() => navigate('/search')}
+                  className="mx-auto mt-6 inline-flex items-center gap-2 rounded-2xl bg-[#1a79f7] px-5 py-3 font-semibold text-white transition-colors hover:bg-[#1563d1]"
+                >
+                  Book Appointment
+                  <FaArrowRight />
+                </button>
+              </div>
+            ) : (
+              <div className="space-y-4">
+                {filteredAppointments.map((appointment) => (
+                  <div key={appointment.id} className="rounded-3xl border border-gray-100 bg-white p-4 shadow-[0_10px_30px_rgba(15,23,42,0.06)] sm:p-5">
+                    <div className="flex items-start gap-4">
+                      <div className="h-16 w-16 shrink-0 overflow-hidden rounded-2xl border border-blue-100 bg-blue-50">
+                        {appointment.profileImage ? (
                           <img
                             src={appointment.profileImage}
-                            alt={appointment.fullName}
-                            className="w-full h-full object-cover"
+                            alt={appointment.fullName || 'Doctor'}
+                            className="h-full w-full object-cover"
                           />
+                        ) : (
+                          <div className="flex h-full w-full items-center justify-center text-[#1a79f7]">
+                            <FaUserMd className="text-2xl" />
+                          </div>
+                        )}
+                      </div>
+
+                      <div className="min-w-0 flex-1">
+                        <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
+                          <div>
+                            <h3 className="text-lg font-bold text-gray-900 sm:text-xl">
+                              {appointment.doctorName || appointment.fullName || appointment.name || 'Doctor'}
+                            </h3>
+                            <p className="text-sm font-medium text-gray-700 sm:text-base">{appointment.specialization || appointment.specialty || ''}</p>
+                            <p className="text-xs text-gray-500 sm:text-sm">{appointment.qualification}</p>
+                          </div>
+                          <span className={`w-fit rounded-full px-3 py-1 text-xs font-semibold sm:text-sm ${getStatusColor(appointment.status)}`}>
+                            {appointment.status.charAt(0).toUpperCase() + appointment.status.slice(1)}
+                          </span>
                         </div>
 
-                        {/* Appointment Details */}
-                        <div className="flex-1 w-full">
-                          <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between mb-3 gap-2">
-                            <div>
-                              <h3 className="text-xl font-bold text-gray-900 mb-1">{appointment.doctorName || appointment.fullName || appointment.name || 'Doctor'}</h3>
-                              <p className="text-base text-gray-700 font-medium">{appointment.specialization || appointment.specialty || ''}</p>
-                              <p className="text-sm text-gray-500">{appointment.qualification}</p>
-                            </div>
-                            <span className={`px-4 py-1.5 rounded-full text-sm font-semibold whitespace-nowrap ${getStatusColor(appointment.status)}`}>
-                              {appointment.status.charAt(0).toUpperCase() + appointment.status.slice(1)}
-                            </span>
-                          </div>
+                        <div className="mt-4 grid grid-cols-1 gap-2 rounded-2xl bg-gray-50 p-3 sm:grid-cols-3 sm:gap-3 sm:p-4">
+                          <InfoPill icon={<FaCalendarAlt />} label="Date" value={new Date(appointment.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })} />
+                          <InfoPill icon={<FaClock />} label="Time" value={appointment.time || 'N/A'} />
+                          <InfoPill icon={<FaMapMarkerAlt />} label="Location" value={appointment.clinicLocation || 'N/A'} />
+                        </div>
 
-                          {/* Date, Time, Location */}
-                          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 my-4 bg-gray-50 p-4 rounded-xl">
-                            <div className="flex items-center gap-2 text-sm text-gray-700">
-                              <div className="bg-white p-2 rounded-lg">
-                                <FaCalendarAlt className="text-[#1a79f7]" />
-                              </div>
-                              <div>
-                                <p className="text-xs text-gray-500">Date</p>
-                                <p className="font-semibold">{new Date(appointment.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</p>
-                              </div>
-                            </div>
-                            <div className="flex items-center gap-2 text-sm text-gray-700">
-                              <div className="bg-white p-2 rounded-lg">
-                                <FaClock className="text-[#1a79f7]" />
-                              </div>
-                              <div>
-                                <p className="text-xs text-gray-500">Time</p>
-                                <p className="font-semibold">{appointment.time}</p>
-                              </div>
-                            </div>
-                            <div className="flex items-center gap-2 text-sm text-gray-700">
-                              <div className="bg-white p-2 rounded-lg">
-                                <FaMapMarkerAlt className="text-[#1a79f7]" />
-                              </div>
-                              <div>
-                                <p className="text-xs text-gray-500">Location</p>
-                                <p className="font-semibold">{appointment.clinicLocation}</p>
-                              </div>
-                            </div>
-                          </div>
-
-                          {/* Fee */}
-                          <div className="flex items-center justify-between pt-4 border-t border-gray-200">
-                            <div className="bg-blue-50 px-4 py-2 rounded-xl">
-                              <p className="text-xs text-gray-600 mb-0.5">Consultation Fee</p>
-                              <p className="text-xl font-bold text-[#1a79f7]">₹{appointment.fee}</p>
-                            </div>
+                        <div className="mt-4 border-t border-gray-100 pt-4">
+                          <div className="inline-flex items-center gap-3 rounded-xl bg-blue-50 px-4 py-2">
+                            <p className="text-xs text-gray-600">Consultation Fee</p>
+                            <p className="text-lg font-bold text-[#1a79f7]">₹{appointment.fee || 0}</p>
                           </div>
                         </div>
                       </div>
                     </div>
-                  ))}
-                </div>
-              )}
-            </>
-          )}
+                  </div>
+                ))}
+              </div>
+            )}
+          </>
+        )}
+      </div>
+    </div>
+  )
+}
+
+function StatCard({ title, value, icon, tone = 'gray' }) {
+  const tones = {
+    gray: 'border-gray-200 bg-white text-gray-700',
+    blue: 'border-blue-200 bg-blue-50 text-[#1a79f7]',
+    green: 'border-green-200 bg-green-50 text-green-600',
+  }
+
+  const toneClass = tones[tone] || tones.gray
+
+  return (
+    <div className={`rounded-2xl border px-4 py-3 ${toneClass}`}>
+      <div className="flex items-center justify-between gap-3">
+        <div>
+          <p className="text-xs font-medium">{title}</p>
+          <p className="mt-1 text-xl font-bold">{value}</p>
+        </div>
+        <div className="rounded-xl bg-white/70 p-2">
+          {icon}
         </div>
       </div>
-    </>
+    </div>
+  )
+}
+
+function InfoPill({ icon, label, value }) {
+  return (
+    <div className="flex items-center gap-2 text-sm text-gray-700">
+      <div className="rounded-lg bg-white p-2 text-[#1a79f7]">
+        {icon}
+      </div>
+      <div className="min-w-0">
+        <p className="text-[11px] text-gray-500">{label}</p>
+        <p className="truncate font-semibold">{value}</p>
+      </div>
+    </div>
   )
 }
 

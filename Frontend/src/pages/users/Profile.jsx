@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react'
-import { FaEnvelope, FaPhone, FaUser, FaMapMarkerAlt, FaSignOutAlt } from 'react-icons/fa';
+import { FaEnvelope, FaPhone, FaUser, FaSignOutAlt, FaEdit, FaShieldAlt } from 'react-icons/fa';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import { userApi } from '../../api/index';
@@ -37,15 +37,16 @@ function Profile() {
 
   if (loading) {
     return (
-      <div className='mb-20 flex flex-col items-center min-h-screen pt-24 px-4'>
-        <p className='text-gray-600'>Loading profile...</p>
+      <div className='mb-20 flex min-h-screen flex-col items-center justify-center bg-white px-4'>
+        <div className="mb-4 h-12 w-12 animate-spin rounded-full border-4 border-blue-100 border-t-[#1a79f7]" />
+        <p className='text-gray-600 font-medium'>Loading profile...</p>
       </div>
     );
   }
 
   if (!userData) {
     return (
-      <div className='mb-20 flex flex-col items-center min-h-screen pt-24 px-4'>
+      <div className='mb-20 flex flex-col items-center justify-center min-h-screen bg-white px-4'>
         <p className='text-red-500'>Unable to load profile</p>
       </div>
     );
@@ -79,63 +80,75 @@ function Profile() {
 
 
   return (
-    <>
-      <div className='mb-20 flex flex-col items-center min-h-screen w-full pt-24 px-4 pb-8 bg-gray-50'>
+    <div className='mb-20 min-h-screen w-full bg-white px-4 pb-8 pt-6 sm:px-5'>
+      <div className='mx-auto w-full max-w-md space-y-4'>
 
-        {/* Profile Header Card */}
-        <div className='bg-white rounded-2xl shadow-md p-8 w-[95%] max-w-md mb-4 flex flex-col items-center'>
-          {/* Avatar */}
-          <div className='bg-blue-100 rounded-full w-24 h-24 flex items-center justify-center mb-4'>
-            <FaUser className='w-12 h-12 text-[#1a79f7]' />
+        <div className='overflow-hidden rounded-3xl border border-gray-100 bg-white shadow-[0_12px_35px_rgba(15,23,42,0.08)]'>
+          <div className='bg-linear-to-r from-[#1a79f7] to-[#0f52b6] px-5 py-5 text-white'>
+            <p className='text-xs uppercase tracking-[0.2em] text-blue-100'>My Profile</p>
+            <h1 className='mt-1 text-2xl font-bold'>Welcome back</h1>
+            <p className='mt-1 text-sm text-blue-100'>Manage your account details and session</p>
           </div>
 
-          {/* Name & Role */}
-          <h1 className='text-2xl font-bold text-gray-800 mb-1'>{displayName}</h1>
-          <p className='text-gray-500 text-lg'>Patient</p>
-        </div>
+          <div className='px-5 pb-6 pt-5'>
+            <div className='mb-4 flex flex-col items-center text-center'>
+              <div className='mb-3 flex h-24 w-24 items-center justify-center rounded-full border-4 border-blue-100 bg-blue-50 shadow-sm'>
+                <FaUser className='h-10 w-10 text-[#1a79f7]' />
+              </div>
+              <h2 className='text-2xl font-bold text-gray-900'>{displayName}</h2>
+              <span className='mt-2 inline-flex items-center gap-2 rounded-full bg-blue-50 px-3 py-1 text-xs font-semibold text-[#1a79f7]'>
+                <FaShieldAlt />
+                Patient Account
+              </span>
+            </div>
 
-        {/* Personal Information Card */}
-        <div className='bg-white rounded-2xl shadow-md p-6 w-[95%] max-w-md mb-4'>
-          <h2 className='text-xl font-bold text-gray-800 mb-6'>Personal Information</h2>
-
-          {/* Email */}
-          <div className='flex items-start gap-4 mb-6'>
-            <FaEnvelope className='w-5 h-5 text-gray-500 mt-1' />
-            <div>
-              <p className='text-gray-500 text-sm mb-1'>Email</p>
-              <p className='text-gray-800 font-medium break-all'>{userData.email}</p>
+            <div className='space-y-3'>
+              <InfoRow
+                icon={<FaEnvelope className='text-[#1a79f7]' />}
+                label='Email'
+                value={userData.email}
+                breakWord
+              />
+              <InfoRow
+                icon={<FaPhone className='text-[#1a79f7]' />}
+                label='Phone'
+                value={userData.phoneNumber || 'N/A'}
+              />
             </div>
           </div>
-
-          {/* Phone */}
-          <div className='flex items-start gap-4 mb-6'>
-            <FaPhone className='w-5 h-5 text-gray-500 mt-1' />
-            <div>
-              <p className='text-gray-500 text-sm mb-1'>Phone</p>
-              <p className='text-gray-800 font-medium'>{userData.phoneNumber || "N/A"}</p>
-            </div>
-          </div>
         </div>
 
-        {/* Edit Profile Button */}
-        <button className='bg-white border-2 border-gray-300
-         text-gray-800 font-bold py-3 rounded-xl w-[95%] max-w-md mb-4
-          hover:bg-gray-50 transition-colors'
+        <button
+          className='flex w-full items-center justify-center gap-2 rounded-2xl border border-gray-200 bg-white py-3.5 font-bold text-gray-800 shadow-sm transition hover:bg-gray-50 active:scale-[0.99]'
           onClick={() => toast.info("Edit profile functionality coming soon")}
         >
+          <FaEdit />
           Edit Profile
         </button>
 
-        {/* Logout Button */}
         <button
           onClick={handleLogout}
-          className='bg-white border-2 border-red-500 text-red-500 font-bold py-3 rounded-xl w-[95%] max-w-md flex items-center justify-center gap-2 hover:bg-red-50 transition-colors'
+          className='flex w-full items-center justify-center gap-2 rounded-2xl border border-red-200 bg-red-50 py-3.5 font-bold text-red-600 transition hover:bg-red-100 active:scale-[0.99]'
         >
-          <FaSignOutAlt className='w-5 h-5' />
+          <FaSignOutAlt className='h-5 w-5' />
           Logout
         </button>
       </div>
-    </>
+    </div>
+  )
+}
+
+function InfoRow({ icon, label, value, breakWord = false }) {
+  return (
+    <div className='flex items-start gap-3 rounded-2xl border border-gray-100 bg-gray-50 p-4'>
+      <div className='mt-0.5 flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-white shadow-sm'>
+        {icon}
+      </div>
+      <div className='min-w-0'>
+        <p className='text-xs uppercase tracking-wide text-gray-500'>{label}</p>
+        <p className={`mt-1 font-semibold text-gray-900 ${breakWord ? 'break-all' : ''}`}>{value}</p>
+      </div>
+    </div>
   )
 }
 

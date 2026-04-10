@@ -1,7 +1,7 @@
 import { IoLocationOutline, IoSearch } from "react-icons/io5";
 import { RiHospitalLine } from "react-icons/ri";
 import DoctorType from '../../components/HomePageDoctorIcon';
-import { FaCalendarCheck, FaShieldAlt, FaClock, FaUserMd, FaStar, FaCheckCircle } from "react-icons/fa";
+import { FaCalendarCheck, FaShieldAlt, FaClock, FaUserMd, FaStar, FaCheckCircle, FaPaperPlane, FaTimes } from "react-icons/fa";
 import { HiArrowRight } from "react-icons/hi";
 import { useNavigate } from "react-router-dom";
 import { useState, useEffect } from "react";
@@ -12,6 +12,15 @@ function Landing() {
     const navigate = useNavigate();
     const [doctors, setDoctors] = useState([]);
     const [loading, setLoading] = useState(true);
+    const [isChatOpen, setIsChatOpen] = useState(false);
+    const [message, setMessage] = useState("");
+    const [chatMessages, setChatMessages] = useState([
+        {
+            id: 1,
+            type: "ai",
+            text: "Hi 👋 I’m Dr AI. I can help with symptoms, specialists, and appointment guidance."
+        }
+    ]);
 
     // Fetch doctors from backend
     useEffect(() => {
@@ -36,6 +45,31 @@ function Landing() {
         { num: "2", title: "Choose", desc: "View profiles, ratings and availability", color: "bg-violet-500" },
         { num: "3", title: "Book", desc: "Pick a slot and confirm your appointment", color: "bg-emerald-500" },
     ];
+
+    const quickPrompts = [
+        "I have fever for 2 days",
+        "Which doctor for skin allergy?",
+        "How to prepare for my appointment?"
+    ];
+
+    const handleSendMessage = () => {
+        if (!message.trim()) return;
+
+        const userMessage = {
+            id: Date.now(),
+            type: "user",
+            text: message.trim()
+        };
+
+        const aiReply = {
+            id: Date.now() + 1,
+            type: "ai",
+            text: "Dr AI backend integration is coming soon. For now, please use Search to find the right specialist quickly."
+        };
+
+        setChatMessages((prev) => [...prev, userMessage, aiReply]);
+        setMessage("");
+    };
 
     return (
         <div className="min-h-screen bg-gray-50 pb-28">
@@ -238,6 +272,102 @@ function Landing() {
                     </button>
                 </div>
             </div>
+
+            {/* Dr AI Chatbot UI */}
+            {isChatOpen && (
+                <div className="fixed inset-x-4 bottom-24 z-40 mx-auto w-auto max-w-md rounded-3xl border border-gray-200 bg-white shadow-[0_20px_45px_rgba(2,6,23,0.2)] sm:inset-x-auto sm:right-6 sm:w-90">
+                    <div className="flex items-center justify-between rounded-t-3xl bg-linear-to-r from-[#1a79f7] to-[#0f52b6] px-4 py-3 text-white">
+                        <div className="flex items-center gap-3">
+                            <div className="relative flex h-10 w-10 items-center justify-center rounded-2xl bg-white/20 shadow-inner">
+                                <div className="absolute inset-0 rounded-2xl bg-white/10" />
+                                <FaUserMd className="relative z-10 text-lg drop-shadow-[0_2px_4px_rgba(0,0,0,0.25)]" />
+                            </div>
+                            <div>
+                                <p className="text-sm font-bold leading-none">Dr AI</p>
+                                <p className="mt-1 text-[11px] text-blue-100">Smart health assistant</p>
+                            </div>
+                        </div>
+                        <button
+                            onClick={() => setIsChatOpen(false)}
+                            className="rounded-xl p-2 transition-colors hover:bg-white/20"
+                            aria-label="Close chat"
+                        >
+                            <FaTimes />
+                        </button>
+                    </div>
+
+                    <div className="max-h-72 space-y-3 overflow-y-auto bg-gray-50 px-4 py-4">
+                        {chatMessages.map((msg) => (
+                            <div
+                                key={msg.id}
+                                className={`flex ${msg.type === "user" ? "justify-end" : "justify-start"}`}
+                            >
+                                <div
+                                    className={`max-w-[85%] rounded-2xl px-3 py-2 text-sm ${msg.type === "user"
+                                        ? "bg-[#1a79f7] text-white"
+                                        : "border border-blue-100 bg-white text-gray-700"
+                                        }`}
+                                >
+                                    {msg.text}
+                                </div>
+                            </div>
+                        ))}
+
+                        <div className="flex flex-wrap gap-2 pt-1">
+                            {quickPrompts.map((prompt, index) => (
+                                <button
+                                    key={index}
+                                    type="button"
+                                    onClick={() => setMessage(prompt)}
+                                    className="rounded-full border border-blue-200 bg-white px-3 py-1 text-xs font-medium text-[#1a79f7] transition-colors hover:bg-blue-50"
+                                >
+                                    {prompt}
+                                </button>
+                            ))}
+                        </div>
+                    </div>
+
+                    <div className="border-t border-gray-100 bg-white p-3">
+                        <div className="flex items-center gap-2 rounded-2xl border border-gray-200 bg-gray-50 px-2 py-2 focus-within:border-[#1a79f7] focus-within:bg-white">
+                            <input
+                                type="text"
+                                value={message}
+                                onChange={(e) => setMessage(e.target.value)}
+                                onKeyDown={(e) => e.key === "Enter" && handleSendMessage()}
+                                placeholder="Ask Dr AI..."
+                                className="w-full bg-transparent px-2 text-sm text-gray-700 outline-none placeholder:text-gray-400"
+                            />
+                            <button
+                                type="button"
+                                onClick={handleSendMessage}
+                                className="flex h-9 w-9 items-center justify-center rounded-xl bg-[#1a79f7] text-white transition-colors hover:bg-[#1563d1]"
+                                aria-label="Send message"
+                            >
+                                <FaPaperPlane className="text-xs" />
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {!isChatOpen && (
+                <button
+                    type="button"
+                    onClick={() => {
+                        setIsChatOpen(true);
+                        toast.info("Dr AI UI ready. Backend integration can be connected later.");
+                    }}
+                    className="fixed bottom-24 right-4 z-50 flex items-center gap-2 rounded-full bg-linear-to-r from-[#1a79f7] to-[#0f52b6] px-4 py-3 text-sm font-bold text-white shadow-lg shadow-blue-300 transition-transform active:scale-95 sm:right-6"
+                >
+                    <span className="relative flex h-7 w-7 items-center justify-center">
+                        <span className="absolute inset-0 rounded-full bg-white/30 blur-[1px]" />
+                        <span className="absolute inset-0 rounded-full border border-white/40 animate-ping" />
+                        <span className="absolute inset-0 rounded-full bg-linear-to-br from-white/40 to-white/10" />
+                        <FaUserMd className="relative z-10 text-sm text-white drop-shadow-[0_2px_3px_rgba(0,0,0,0.35)] animate-bounce" />
+                    </span>
+                    <span>Dr AI</span>
+                </button>
+            )}
 
         </div>
     );

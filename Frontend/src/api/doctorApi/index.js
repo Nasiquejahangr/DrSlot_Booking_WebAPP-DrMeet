@@ -112,9 +112,12 @@ export const getPendingDoctors = async () => {
  * @param {number} doctorId
  */
 export const approveDoctor = async (doctorId) => {
-  const response = await fetch(getFullUrl(`/doctors/admin/${doctorId}/approve`), {
-    method: 'PUT',
-  });
+  const response = await fetch(
+    getFullUrl(`/doctors/admin/${doctorId}/approve`),
+    {
+      method: 'PUT',
+    }
+  );
 
   if (!response.ok) {
     throw new Error('Failed to approve doctor');
@@ -128,9 +131,12 @@ export const approveDoctor = async (doctorId) => {
  * @param {number} doctorId
  */
 export const rejectDoctor = async (doctorId) => {
-  const response = await fetch(getFullUrl(`/doctors/admin/${doctorId}/reject`), {
-    method: 'PUT',
-  });
+  const response = await fetch(
+    getFullUrl(`/doctors/admin/${doctorId}/reject`),
+    {
+      method: 'PUT',
+    }
+  );
 
   if (!response.ok) {
     throw new Error('Failed to reject doctor');
