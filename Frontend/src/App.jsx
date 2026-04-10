@@ -13,6 +13,7 @@ import 'react-toastify/dist/ReactToastify.css';
 import Login from './pages/auth/User/Login';
 import Register from './pages/auth/User/Register';
 import PrivateRoute from "./components/PrivateRoute";
+import ProtectedAdminRoute from "./components/ProtectedAdminRoute";
 import Dashboard from './pages/Doctor/Dashboard';
 import DoctorRegistration from './pages/auth/Doctor/DoctorRegistration';
 import Doctorprofile from './pages/Doctor/Doctorprofile';
@@ -20,6 +21,7 @@ import Vieslot from './pages/users/ViewSlot';
 import DoctorAppointments from './pages/Doctor/DoctorAppointments';
 import ManageSlots from './pages/Doctor/MagangeSlot';
 import Payment from './Payment/Payment';
+import AdminLogin from './pages/Admin/AdminLogin';
 import DoctorApprovals from './pages/Admin/DoctorApprovals';
 
 function App() {
@@ -29,7 +31,7 @@ function App() {
   const location = useLocation();
 
   // const hideLayout = location.pathname === "/login" || location.pathname === "/register";
-  const authRoutes = ["/login", "/register", "/DoctorRegister", "/admin"];
+  const authRoutes = ["/login", "/register", "/DoctorRegister", "/admin", "/admin-login"];
   const hideLayout = authRoutes.includes(location.pathname);
 
   const userType = (sessionStorage.getItem("userType") || localStorage.getItem("userType") || "").toLowerCase().trim();
@@ -146,9 +148,16 @@ function App() {
               <DoctorAppointments />
             </motion.div>
           } />
+          <Route path='/admin-login' element={
+            <motion.div {...pageFade}>
+              <AdminLogin />
+            </motion.div>
+          } />
           <Route path='/admin' element={
             <motion.div {...pageFade}>
-              <DoctorApprovals />
+              <ProtectedAdminRoute>
+                <DoctorApprovals />
+              </ProtectedAdminRoute>
             </motion.div>
           } />
         </Routes>

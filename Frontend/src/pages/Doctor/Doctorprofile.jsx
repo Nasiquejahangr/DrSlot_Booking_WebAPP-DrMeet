@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { HiUser, HiMail, HiPhone, HiBriefcase, HiAcademicCap, HiPencil, HiCheck, HiX, HiCamera } from 'react-icons/hi';
+import { HiUser, HiMail, HiPhone, HiBriefcase, HiAcademicCap, HiPencil, HiCheck, HiX, HiCamera, HiArrowLeft } from 'react-icons/hi';
 import { toast } from 'react-toastify';
 import { CiLocationOn } from 'react-icons/ci';
 import { useNavigate } from 'react-router-dom';
@@ -125,27 +125,36 @@ function DocProfile() {
     };
 
     return (
-        <div className="min-h-screen bg-linear-to-r from-blue-50 via-white to-cyan-50 p-6 mb-20">
-            <div className="max-w-4xl mx-auto space-y-6">
+        <div className="min-h-screen bg-white px-4 pb-24 pt-4 sm:px-5">
+            <div className="mx-auto w-full max-w-4xl space-y-4 sm:space-y-5">
+
+                <button
+                    onClick={() => navigate(-1)}
+                    className="inline-flex items-center gap-2 rounded-2xl border border-gray-200 bg-white px-4 py-2.5 text-sm font-semibold text-gray-700 shadow-sm transition hover:border-[#1a79f7] hover:text-[#1a79f7]"
+                >
+                    <HiArrowLeft className="h-5 w-5" />
+                    Back
+                </button>
 
 
                 {/* Header Card */}
-                <div className="bg-linear-to-r from-blue-500 to-cyan-500 rounded-2xl shadow-xl p-8 text-white">
-                    <div className="flex items-center gap-6">
+                <div className="rounded-3xl border border-gray-100 bg-white p-5 shadow-[0_10px_30px_rgba(15,23,42,0.08)] sm:p-6">
+                    <div className="mb-4 inline-flex items-center gap-2 rounded-full bg-blue-50 px-3 py-1 text-xs font-semibold uppercase tracking-[0.2em] text-[#1a79f7]">
+                        Doctor Profile
+                    </div>
+                    <div className="flex flex-col items-center gap-4 text-center sm:flex-row sm:items-center sm:text-left">
                         <div className="relative group">
-                            <div className="w-24 h-24 bg-white/20 backdrop-blur-sm rounded-full flex items-center 
-                            justify-center border-4 border-white/30 shadow-lg overflow-hidden">
+                            <div className="h-24 w-24 overflow-hidden rounded-full border-4 border-blue-100 bg-blue-50 shadow-sm flex items-center justify-center">
                                 {profileImage ? (
                                     <img src={profileImage} alt="Profile" className="w-full h-full object-cover" />
                                 ) : (
-                                    <HiUser className="w-16 h-16 text-white" />
+                                    <HiUser className="h-12 w-12 text-[#1a79f7]" />
                                 )}
                             </div>
 
                             <button
                                 onClick={handleEditImageClick}
-                                className="absolute bottom-0 right-0 bg-blue-600 hover:bg-blue-700 p-2 rounded-full
-                                 shadow-lg transition-all duration-300 group-hover:scale-110"
+                                className="absolute bottom-0 right-0 rounded-full bg-[#1a79f7] p-2 shadow-lg transition-all duration-300 hover:bg-[#1563d1] group-hover:scale-110"
                             >
                                 <HiCamera className="w-4 h-4 text-white" />
                             </button>
@@ -160,17 +169,17 @@ function DocProfile() {
                         </div>
 
                         <div>
-                            <h1 className="text-3xl font-bold mb-2">{name}</h1>
-                            <p className="text-blue-100 text-lg">{specialization}</p>
-                            <p className="text-blue-50 text-sm mt-1">{hospital}</p>
+                            <h1 className="mb-1 text-2xl font-bold text-gray-900 sm:text-3xl">{name}</h1>
+                            <p className="text-base font-medium text-[#1a79f7] sm:text-lg">{specialization}</p>
+                            <p className="mt-1 text-sm text-gray-500">{hospital}</p>
                         </div>
                     </div>
                 </div>
 
                 {/* About Section */}
-                <div className="bg-white rounded-2xl shadow-lg border border-gray-100 p-6">
-                    <div className="flex items-center justify-between mb-4">
-                        <h2 className="text-2xl font-bold text-gray-800 flex items-center gap-2">
+                <div className="rounded-3xl border border-gray-100 bg-white p-5 shadow-[0_10px_30px_rgba(15,23,42,0.08)] sm:p-6">
+                    <div className="mb-4 flex items-center justify-between gap-3">
+                        <h2 className="flex items-center gap-2 text-xl font-bold text-gray-800 sm:text-2xl">
                             <HiAcademicCap className="text-blue-500" />
                             About Me
                         </h2>
@@ -178,7 +187,7 @@ function DocProfile() {
                         {!isEditingAbout && (
                             <button
                                 onClick={() => setIsEditingAbout(true)}
-                                className="flex items-center gap-2 px-4 py-2 bg-blue-50 hover:bg-blue-100 text-blue-600 rounded-lg"
+                                className="inline-flex items-center gap-2 rounded-xl bg-blue-50 px-4 py-2 text-sm font-semibold text-blue-600 transition-colors hover:bg-blue-100"
                             >
                                 <HiPencil className="w-4 h-4" />
                                 Edit
@@ -191,12 +200,12 @@ function DocProfile() {
                             <textarea
                                 value={about}
                                 onChange={(e) => setAbout(e.target.value)}
-                                className="w-full p-4 border-2 border-blue-200 rounded-xl focus:border-blue-500 focus:ring-2 focus:ring-blue-200 outline-none transition-all min-h-37.5 resize-y"
+                                className="min-h-36 w-full resize-y rounded-2xl border-2 border-blue-200 p-4 outline-none transition-all focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
                             />
-                            <div className="flex gap-3">
+                            <div className="flex flex-col gap-3 sm:flex-row">
                                 <button
                                     onClick={handleSaveAbout}
-                                    className="flex items-center gap-2 px-6 py-2.5 bg-blue-600 text-white rounded-lg"
+                                    className="inline-flex items-center justify-center gap-2 rounded-xl bg-[#1a79f7] px-6 py-2.5 text-white transition-colors hover:bg-[#1563d1]"
                                 >
                                     <HiCheck className="w-5 h-5" />
                                     Save
@@ -204,7 +213,7 @@ function DocProfile() {
 
                                 <button
                                     onClick={handleCancelAbout}
-                                    className="flex items-center gap-2 px-6 py-2.5 bg-gray-100 text-gray-700 rounded-lg"
+                                    className="inline-flex items-center justify-center gap-2 rounded-xl bg-gray-100 px-6 py-2.5 text-gray-700 transition-colors hover:bg-gray-200"
                                 >
                                     <HiX className="w-5 h-5" />
                                     Cancel
@@ -212,18 +221,18 @@ function DocProfile() {
                             </div>
                         </div>
                     ) : (
-                        <p className="text-gray-600 leading-relaxed whitespace-pre-line">{about}</p>
+                        <p className="whitespace-pre-line text-sm leading-7 text-gray-600 sm:text-base">{about}</p>
                     )}
                 </div>
 
                 {/* Professional Info */}
-                <div className="bg-white rounded-2xl shadow-lg border border-gray-100 p-6">
-                    <h2 className="text-2xl font-bold text-gray-800 mb-6 flex items-center gap-2">
+                <div className="rounded-3xl border border-gray-100 bg-white p-5 shadow-[0_10px_30px_rgba(15,23,42,0.08)] sm:p-6">
+                    <h2 className="mb-5 flex items-center gap-2 text-xl font-bold text-gray-800 sm:text-2xl">
                         <HiBriefcase className="text-blue-500" />
                         Professional Information
                     </h2>
 
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div className="grid grid-cols-1 gap-3 sm:gap-4 md:grid-cols-2">
 
                         <InfoCard icon={<HiUser />} title="Full Name" value={name} />
                         <InfoCard icon={<HiMail />} title="Email" value={email} />
@@ -244,13 +253,13 @@ function DocProfile() {
 
 function InfoCard({ icon, title, value, fullWidth }) {
     return (
-        <div className={`flex items-start gap-4 p-4 bg-blue-50 rounded-xl ${fullWidth ? "md:col-span-2" : ""}`}>
-            <div className="w-12 h-12 bg-blue-500 rounded-lg flex items-center justify-center text-white shadow-md">
+        <div className={`flex items-start gap-3 rounded-2xl border border-gray-100 bg-gray-50 p-4 ${fullWidth ? "md:col-span-2" : ""}`}>
+            <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-white text-[#1a79f7] shadow-sm">
                 {icon}
             </div>
-            <div>
-                <h3 className="text-sm font-semibold text-gray-500 uppercase mb-1">{title}</h3>
-                <p className="text-gray-800 font-medium">{value}</p>
+            <div className="min-w-0">
+                <h3 className="mb-1 text-xs font-semibold uppercase tracking-wide text-gray-500">{title}</h3>
+                <p className="font-medium text-gray-800 wrap-break-word">{value}</p>
             </div>
         </div>
     );

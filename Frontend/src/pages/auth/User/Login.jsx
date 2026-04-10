@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import { doctorApi, userApi } from '../../../api/index';
 import { getPatientDisplayName } from '../../../api/userApi/index';
+import { FaEnvelope, FaLock, FaSignInAlt } from 'react-icons/fa';
 
 function Login() {
   const [email, setEmail] = useState("");
@@ -81,60 +82,75 @@ function Login() {
   }
 
   return (
-    <div className='mb-20 flex justify-center mt-30 shadow-[0_0_30px_rgba(0,0,0,0.15)] rounded-2xl w-[95%] max-w-md mx-auto bg-white'>
-
-      <form
-        className="flex flex-col justify-center p-9 rounded-2xl w-[95%] gap-6"
-        onSubmit={handleSubmit}
-      >
-
-        <div className='flex justify-center'>
-          <img src={Logo} alt="Logo" className='w-20 h-20 object-contain' />
-        </div>
-
-        <h2 className="text-2xl text-center font-bold mb-6 text-gray-700">
-          Login
-        </h2>
-
-        <div>
-          <label className="block text-gray-700 mb-2">Email</label>
-          <input
-            required
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            type="email"
-            className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#1a79f7]"
-            placeholder="Enter your email"
-          />
-        </div>
-
-        <div>
-          <label className="block text-gray-700 mb-2">Password</label>
-          <input
-            required
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            type="password"
-            className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#1a79f7]"
-            placeholder="Enter your password"
-          />
-        </div>
-
-        <button
-          type="submit"
-          className="w-full bg-[#1a79f7] hover:bg-[#104b9a] text-white font-bold py-3 rounded-xl transition-colors"
+    <div className="min-h-screen bg-white px-4 py-4 sm:px-5 sm:py-6">
+      <div className="mx-auto flex min-h-[calc(100vh-2rem)] w-full max-w-md items-center">
+        <form
+          className="w-full rounded-3xl border border-gray-100 bg-white p-4 shadow-[0_10px_30px_rgba(15,23,42,0.08)] sm:p-6"
+          onSubmit={handleSubmit}
         >
-          Login
-        </button>
+          <div className="mb-5 flex flex-col items-center text-center">
+            <div className="mb-3 flex h-16 w-16 items-center justify-center rounded-2xl border border-gray-100 bg-white shadow-sm">
+              <img src={Logo} alt="Logo" className="h-10 w-10 object-contain" />
+            </div>
+            <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[#1a79f7]">Healthcare Portal</p>
+            <h2 className="mt-2 text-2xl font-bold text-gray-900">Login</h2>
+            <p className="mt-2 text-sm leading-6 text-gray-500">
+              Sign in to continue to your account.
+            </p>
+          </div>
 
-        <span className='text-center'>
-          <span className='text-gray-600'>Don't have an account? </span>
-          <a href="/register" className="text-[#1a79f7] hover:underline">
-            Register
-          </a>
-        </span>
+          <div className="space-y-3">
+            {/* <Field label="Email" icon={<FaEnvelope />}> */}
+            <input
+              required
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              type="email"
+              placeholder="Enter your email"
+              className="w-full rounded-2xl border border-gray-200 bg-gray-50 py-3.5 pl-12 pr-4 text-base outline-none transition placeholder:text-gray-400 focus:border-[#1a79f7] focus:bg-white focus:ring-4 focus:ring-blue-100"
+            />
+            {/* </Field> */}
 
-      </form>
+            {/* <Field label="Password" icon={<FaLock />}> */}
+            <input
+              required
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              type="password"
+              placeholder="Enter your password"
+              className="w-full rounded-2xl border border-gray-200 bg-gray-50 py-3.5 pl-12 pr-4 text-base outline-none transition placeholder:text-gray-400 focus:border-[#1a79f7] focus:bg-white focus:ring-4 focus:ring-blue-100"
+            />
+            {/* </Field> */}
+          </div>
+
+          <button
+            type="submit"
+            className="mt-5 flex w-full items-center justify-center gap-2 rounded-2xl bg-[#1a79f7] py-3.5 text-base font-bold text-white transition-colors hover:bg-[#104b9a] active:scale-[0.99]"
+          >
+            <FaSignInAlt />
+            Login
+          </button>
+
+          <p className="mt-4 text-center text-sm text-gray-600">
+            Don't have an account?
+            <a href="/register" className="ml-1 font-bold text-[#1a79f7] hover:underline">
+              Register
+            </a>
+          </p>
+        </form>
+      </div >
+    </div >
+  );
+}
+
+function Field({ label, icon, children }) {
+  return (
+    <div>
+      <div className="relative">
+        <span className="pointer-events-none absolute left-4 top-3.5 text-gray-400">{icon}</span>
+        <label className="mb-2 block text-sm font-semibold text-gray-700">{label}</label>
+        {children}
+      </div>
     </div>
   );
 }

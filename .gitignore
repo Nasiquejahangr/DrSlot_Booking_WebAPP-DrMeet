@@ -8,6 +8,20 @@
 .env.*
 *.env
 
+# Sensitive config files (backend)
+HealthCare_Backend/src/main/resources/application.properties
+HealthCare_Backend/src/main/resources/application-*.properties
+
+# Secret files / credentials
+*.secret
+*.secrets
+*.credentials
+*.token
+*.crt
+*.pfx
+*.p8
+*.pkcs12
+
 # Keys / certificates
 *.pem
 *.key
@@ -31,3 +45,6 @@ Frontend/docs/
 *.API_REFACTORING_SUMMARY.md
 *.SLOTS_IMPLEMENTATION.md
 *.Documentation.md
+*.ADMIN_LOGIN_QUICKSTART.md
+*.ADMIN_LOGIN_QUICKSTART.md
+*.ADMIN_LOGIN_SYSTEM.md
