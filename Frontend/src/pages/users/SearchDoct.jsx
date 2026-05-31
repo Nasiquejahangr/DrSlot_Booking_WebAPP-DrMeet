@@ -1,7 +1,7 @@
 import React from 'react'
 import { IoIosArrowRoundBack } from "react-icons/io";
 import { useState, useEffect } from 'react';
-import DoctorCard from '../../components/Doctorcard';
+import DoctorCard from '../../components/DoctorCard';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import { doctorApi } from '../../api/index';
