@@ -53,3 +53,10 @@ hs_err_pid*
 replay_pid*
 
 
+
+# wrangler files
+.wrangler
+.dev.vars*
+!.dev.vars.example
+.env*
+!.env.example
