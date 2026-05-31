@@ -21,6 +21,7 @@ function DoctorRegistration() {
     const [qualification, setQualification] = useState("");
     const [certificate, setCertificate] = useState(null);
     const [fee, setFee] = useState("");
+    const [isLoading, setIsLoading] = useState(false);
 
 
     function handleFileChange(e) {
@@ -57,8 +58,18 @@ function DoctorRegistration() {
             return;
         }
 
-        // Phone validation
-        if (!/^\d{10}$/.test(phone)) {
+        // Phone validation & sanitization (remove non-digits, trim country codes like +91 or +1)
+        const sanitizedPhone = phone.replace(/\D/g, '');
+        let finalPhone = sanitizedPhone;
+        if (sanitizedPhone.length === 12 && sanitizedPhone.startsWith('91')) {
+            finalPhone = sanitizedPhone.slice(2);
+        } else if (sanitizedPhone.length === 11 && sanitizedPhone.startsWith('1')) {
+            finalPhone = sanitizedPhone.slice(1);
+        } else if (sanitizedPhone.length === 11 && sanitizedPhone.startsWith('0')) {
+            finalPhone = sanitizedPhone.slice(1);
+        }
+
+        if (!/^\d{10}$/.test(finalPhone)) {
             toast.error("Please enter a valid 10-digit phone number!");
             return;
         }
@@ -85,7 +96,7 @@ function DoctorRegistration() {
         const newDoctor = {
             fullName,
             email,
-            phone,
+            phone: finalPhone,
             password,
             specialization,
             qualification,
@@ -106,11 +117,14 @@ function DoctorRegistration() {
         newDoctor.fee = Number(newDoctor.fee);
         newDoctor.workingExperience = Number(newDoctor.workingExperience);
 
+        setIsLoading(true);
         try {
             await doctorApi.doctorRegister(newDoctor);
+            setIsLoading(false);
             toast.success("Registration submitted. Waiting for admin approval.");
             window.location.href = "/login";
         } catch (err) {
+            setIsLoading(false);
             console.error(err);
             toast.error(err?.message || "Registration failed");
         }
@@ -365,9 +379,20 @@ function DoctorRegistration() {
 
                     <button
                         type="submit"
-                        className="w-full rounded-2xl bg-[#1a79f7] px-4 py-3.5 text-base font-bold text-white transition-colors hover:bg-[#104b9a] active:scale-[0.99] sm:text-lg"
+                        disabled={isLoading}
+                        className="w-full rounded-2xl bg-[#1a79f7] px-4 py-3.5 text-base font-bold text-white transition-colors hover:bg-[#104b9a] active:scale-[0.99] disabled:bg-blue-400 disabled:cursor-not-allowed flex items-center justify-center gap-2 sm:text-lg"
                     >
-                        Register as Doctor
+                        {isLoading ? (
+                            <>
+                                <svg className="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                </svg>
+                                Registering...
+                            </>
+                        ) : (
+                            "Register as Doctor"
+                        )}
                     </button>
                     <a href="/login" className="mt-2 block text-center font-bold text-[#1563d1] hover:underline">
                         Already have an account? Login
