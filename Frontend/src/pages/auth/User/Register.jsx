@@ -55,7 +55,7 @@ function Register() {
       phoneNumber
     };
     PatientArray.push(newPatient);
-    console.log(newPatient);
+    // console.log(newPatient);
     // localStorage.setItem("users", JSON.stringify(PatientArray));
     // Set login session
     // localStorage.setItem("token", "userLoggedIn");

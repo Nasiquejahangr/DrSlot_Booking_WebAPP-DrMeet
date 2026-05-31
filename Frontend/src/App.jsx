@@ -1,13 +1,13 @@
 import React from 'react'
+import { motion } from "framer-motion";
 import Nav from './components/Nav'
 import Logoandprofile from './components/Logoandprofile'
 import Landing from './pages/users/Landing'
 import { Routes, Route, useLocation } from 'react-router-dom';
-import Profile from './pages/users/profile';
+import Profile from './pages/users/Profile';
 import SearchDoct from './pages/users/SearchDoct';
 import Appointment from './pages/users/Appointment';
-// eslint-disable-next-line no-unused-vars
-import { AnimatePresence, motion } from "framer-motion";
+import { AnimatePresence } from "framer-motion";
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import Login from './pages/auth/User/Login';

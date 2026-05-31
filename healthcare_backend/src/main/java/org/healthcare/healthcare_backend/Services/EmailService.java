@@ -42,7 +42,12 @@ public class EmailService {
                         "------------------------------"
         );
 
-        mailSender.send(message);
+        try {
+            mailSender.send(message);
+        } catch (Exception e) {
+            System.err.println("Failed to send email: " + e.getMessage());
+            // Safe to ignore since appointment was booked and payment succeeded
+        }
 
     }
 }
