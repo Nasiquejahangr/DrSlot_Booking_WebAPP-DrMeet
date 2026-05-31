@@ -48,11 +48,12 @@ public class DoctorEntity {
     private String about;
 
     @Lob
-    @Column(columnDefinition = "LONGTEXT")
+    @Column(name = "profile_image")
     private String profileImage;
     private String certificate;
 
-    @Column(columnDefinition = "TEXT")
+    @Lob
+    @Column(name = "slots")
     private String slots; // store JSON as string (for backward compatibility)
 
     @OneToMany(mappedBy = "doctor", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
