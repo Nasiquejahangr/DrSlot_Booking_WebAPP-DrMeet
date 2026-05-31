@@ -82,14 +82,14 @@ public class DoctorService {
 
     //getting all doctors for search and home page
     public java.util.List<DoctorEntity> getAllDoctors() {
-        return doctorRepository.findAll()
+        return doctorRepository.findAllWithSlots()
                 .stream()
                 .filter(doctor -> doctor.getApprovalStatus() == null || "APPROVED".equalsIgnoreCase(doctor.getApprovalStatus()))
                 .collect(Collectors.toList());
     }
 
     public java.util.List<DoctorEntity> getAllDoctorsForAdmin() {
-        return doctorRepository.findAll();
+        return doctorRepository.findAllWithSlots();
     }
 
     public java.util.List<DoctorEntity> getPendingDoctors() {
