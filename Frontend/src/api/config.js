@@ -1,9 +1,10 @@
 // API Base Configuration
 // In development, use relative '/api' proxy. In production, connect directly to the Render backend URL.
-export const API_BASE_URL = typeof window !== 'undefined' && 
+export const API_BASE_URL = typeof window !== 'undefined' &&
   (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')
-    ? '/api'
-    : 'https://drmeet-backend.onrender.com/api';
+  ? '/api'
+  : 'https://drmeet-backend.onrender.com/api';
+
 
 // API Endpoints
 export const ENDPOINTS = {
