@@ -1,0 +1,18 @@
+{
+  "name": "DrMeet - Book Doctor Appointments Online",
+  "short_name": "DrMeet",
+  "description": "Book verified doctor appointments online instantly.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#1a79f7",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "/Logo.svg",
+      "type": "image/svg+xml",
+      "sizes": "any",
+      "purpose": "any maskable"
+    }
+  ]
+}
